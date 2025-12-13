@@ -16,9 +16,14 @@ logger = logging.getLogger(__name__)
 
 class BackupManager:
     """Backup manager for database and files"""
-    def __init__(self, backup_dir: str = "backups", retention_days: int = 30):
+    def __init__(self, backup_dir: str = "/tmp/backups", retention_days: int = 30):
         self.backup_dir = Path(backup_dir)
-        self.backup_dir.mkdir(exist_ok=True, parents=True)
+        try:
+            self.backup_dir.mkdir(exist_ok=True, parents=True)
+        except PermissionError:
+            # Fallback to /tmp if we can't create the backup directory
+            self.backup_dir = Path("/tmp/backups")
+            self.backup_dir.mkdir(exist_ok=True, parents=True)
         self.retention_days = retention_days
     
     def backup_database(self, database_url: str, backup_name: str = None) -> str:
