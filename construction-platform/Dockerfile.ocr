@@ -1,0 +1,41 @@
+# Dockerfile for OCR Service
+FROM python:3.11-slim
+
+# Install Tesseract OCR and dependencies with retry logic
+RUN for i in 1 2 3 4 5; do \
+        apt-get update && \
+        apt-get install -y --no-install-recommends \
+            tesseract-ocr \
+            tesseract-ocr-eng \
+            libtesseract-dev \
+            poppler-utils \
+            curl \
+            && \
+        rm -rf /var/lib/apt/lists/* && \
+        break || sleep 10; \
+    done
+
+# Install Python dependencies
+WORKDIR /app
+COPY python-services/converters/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy OCR service
+COPY python-services/converters/ocr_service.py /app/ocr_service.py
+
+# Create uploads directory
+RUN mkdir -p /app/uploads && \
+    useradd -m -u 1000 ocruser && \
+    chown -R ocruser:ocruser /app
+
+USER ocruser
+
+EXPOSE 5056
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5056/health || exit 1
+
+# Start OCR service
+CMD ["python3", "ocr_service.py"]
+

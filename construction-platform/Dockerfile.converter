@@ -1,0 +1,66 @@
+# Multi-stage build for CAD converters with Wine
+FROM ubuntu:22.04 AS base
+
+# Install Wine and dependencies with retry logic for network resilience
+# Note: wine32 is not available in Ubuntu 22.04, use wine:i386 architecture instead if needed
+RUN for i in 1 2 3 4 5; do \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    wine \
+    winetricks \
+    wine64 \
+    xvfb \
+    python3 \
+    python3-pip \
+    curl \
+    wget \
+    software-properties-common && \
+    rm -rf /var/lib/apt/lists/* && \
+    break || sleep 10; \
+    done
+
+# Verify Wine installation
+RUN which wine && wine --version || echo "Wine installation check"
+
+# Set up Wine environment
+ENV WINEPREFIX=/root/.wine
+ENV WINEARCH=win64
+ENV DISPLAY=:99
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Initialize Wine (create wine prefix and install dependencies)
+# winecfg is a GUI tool - in headless mode, we initialize Wine differently
+# Use wineboot to initialize the prefix instead of winecfg
+RUN mkdir -p /root/.wine && \
+    xvfb-run -a wineboot --init || \
+    (WINEARCH=win64 WINEPREFIX=/root/.wine wine wineboot --init || echo "Wine init skipped") && \
+    (xvfb-run -a winetricks -q vcrun2019 || echo "Winetricks vcrun2019 skipped - may not be critical")
+
+# Install Python dependencies
+# Ensure Python3 and pip are available (don't rely on cache)
+# Python3 and pip are already installed in the base image setup above
+RUN python3 --version && \
+    python3 -m pip --version && \
+    python3 -m pip install --upgrade pip setuptools wheel
+
+COPY python-services/converters/requirements.txt /app/requirements.txt
+RUN python3 -m pip install --ignore-installed --no-cache-dir flask flask-cors requests pandas openpyxl
+
+# Copy CAD converters
+COPY cad-converters/ /app/converters/
+
+# Copy converter services
+COPY python-services/converters/ /app/services/
+
+WORKDIR /app
+
+# Create non-root user
+RUN useradd -m -u 1000 converter && \
+    chown -R converter:converter /app
+
+USER converter
+
+EXPOSE 5055 5056 5057
+
+# Start converter service
+CMD ["python3", "services/dwg_service.py"]

@@ -1,0 +1,92 @@
+{
+    "concrete": {
+        "price": 75.00,
+        "unit": "m³",
+        "currency": "EUR",
+        "supplier": "Est Concrete OÜ"
+    },
+    "steel": {
+        "price": 1200.00,
+        "unit": "ton",
+        "currency": "EUR",
+        "supplier": "Baltic Steel AS"
+    },
+    "rebar": {
+        "price": 950.00,
+        "unit": "ton",
+        "currency": "EUR",
+        "supplier": "Baltic Steel AS"
+    },
+    "wood": {
+        "price": 350.00,
+        "unit": "m³",
+        "currency": "EUR",
+        "supplier": "Nordic Timber OÜ"
+    },
+    "brick": {
+        "price": 0.45,
+        "unit": "unit",
+        "currency": "EUR",
+        "supplier": "Estbrick AS"
+    },
+    "insulation": {
+        "price": 12.50,
+        "unit": "m²",
+        "currency": "EUR",
+        "supplier": "Termo Systems OÜ"
+    },
+    "roofing": {
+        "price": 25.00,
+        "unit": "m²",
+        "currency": "EUR",
+        "supplier": "Roof Masters AS"
+    },
+    "drywall": {
+        "price": 8.50,
+        "unit": "m²",
+        "currency": "EUR",
+        "supplier": "Interior Supply OÜ"
+    },
+    "paint": {
+        "price": 15.00,
+        "unit": "liter",
+        "currency": "EUR",
+        "supplier": "Color Expert AS"
+    },
+    "betoon": {
+        "price": 75.00,
+        "unit": "m³",
+        "currency": "EUR",
+        "supplier": "Est Concrete OÜ"
+    },
+    "teras": {
+        "price": 1200.00,
+        "unit": "tonn",
+        "currency": "EUR",
+        "supplier": "Baltic Steel AS"
+    },
+    "puit": {
+        "price": 350.00,
+        "unit": "m³",
+        "currency": "EUR",
+        "supplier": "Nordic Timber OÜ"
+    },
+    "tellis": {
+        "price": 0.45,
+        "unit": "tk",
+        "currency": "EUR",
+        "supplier": "Estbrick AS"
+    },
+    "soojustus": {
+        "price": 12.50,
+        "unit": "m²",
+        "currency": "EUR",
+        "supplier": "Termo Systems OÜ"
+    },
+    "katus": {
+        "price": 25.00,
+        "unit": "m²",
+        "currency": "EUR",
+        "supplier": "Roof Masters AS"
+    }
+}

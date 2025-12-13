@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1.4
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Use multiple mirror attempts with retries
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    for i in 1 2 3 4 5; do \
+        apt-get update && \
+        apt-get install -y --no-install-recommends \
+            build-essential \
+            gcc \
+            libffi-dev \
+            python3-dev && \
+        rm -rf /var/lib/apt/lists/* && break || sleep 5; \
+    done
+
+# Upgrade pip and install wheel
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip setuptools wheel
+
+# Copy requirements
+COPY web-ui/requirements.txt .
+
+# Install to /install with caching
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+# =========================
+# PRODUCTION STAGE
+# =========================
+FROM python:3.11-slim AS production
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code
+COPY web-ui/ .
+
+# Create a non-root user
+RUN useradd -m -u 1000 appuser
+USER appuser
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]

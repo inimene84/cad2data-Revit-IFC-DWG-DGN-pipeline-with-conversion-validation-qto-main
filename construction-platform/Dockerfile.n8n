@@ -1,0 +1,12 @@
+FROM n8nio/n8n:latest
+USER root
+# Retry apk add with multiple attempts for network resilience
+RUN for i in 1 2 3 4 5; do \
+    apk update && \
+    apk add --no-cache curl && \
+    break || sleep 5; \
+    break || sleep 5; \
+    done
+
+RUN npm install -g n8n-nodes-firecrawl --ignore-scripts --unsafe-perm
+USER node

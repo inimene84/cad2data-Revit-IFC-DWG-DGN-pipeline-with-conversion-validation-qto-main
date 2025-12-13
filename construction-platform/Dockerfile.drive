@@ -1,0 +1,37 @@
+# Dockerfile for Drive Service
+FROM python:3.11-slim
+
+# Install dependencies with retry logic
+RUN for i in 1 2 3 4 5; do \
+        apt-get update && \
+        apt-get install -y --no-install-recommends \
+            curl \
+            && \
+        rm -rf /var/lib/apt/lists/* && \
+        break || sleep 10; \
+    done
+
+# Install Python dependencies
+WORKDIR /app
+COPY python-services/converters/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Drive service
+COPY python-services/converters/drive_provisioner.py /app/drive_provisioner.py
+
+# Create uploads directory
+RUN mkdir -p /app/uploads && \
+    useradd -m -u 1000 driveuser && \
+    chown -R driveuser:driveuser /app
+
+USER driveuser
+
+EXPOSE 5057
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5057/health || exit 1
+
+# Start Drive service
+CMD ["python3", "drive_provisioner.py"]
+
