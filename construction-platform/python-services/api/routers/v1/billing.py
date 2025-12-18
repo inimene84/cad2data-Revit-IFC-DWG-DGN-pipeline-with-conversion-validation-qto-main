@@ -8,10 +8,10 @@ import os
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
-# VAT rates by country
+# VAT rates by country (updated December 2024)
 VAT_RATES = {
-    "EE": 0.22,  # Estonia
-    "FI": 0.24,  # Finland
+    "EE": 0.24,  # Estonia (increased to 24% July 2025)
+    "FI": 0.255, # Finland (increased to 25.5% Sept 2024)
     "DE": 0.19,  # Germany
     "LV": 0.21,  # Latvia
     "LT": 0.21,  # Lithuania
@@ -23,9 +23,9 @@ async def get_vat_rates():
     """Get VAT rates for supported countries"""
     return {
         "rates": VAT_RATES,
-        "default_rate": 0.22,
+        "default_rate": 0.24,
         "default_country": "EE",
-        "last_updated": "2024-01-01"
+        "last_updated": "2024-12-18"
     }
 
 

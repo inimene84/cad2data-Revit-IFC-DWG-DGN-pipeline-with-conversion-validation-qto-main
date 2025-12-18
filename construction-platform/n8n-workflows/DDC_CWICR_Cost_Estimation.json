@@ -43,7 +43,7 @@
                         {
                             "id": "vat-rate",
                             "name": "vat_rate",
-                            "value": "0.22",
+                            "value": "0.24",
                             "type": "number"
                         }
                     ]
