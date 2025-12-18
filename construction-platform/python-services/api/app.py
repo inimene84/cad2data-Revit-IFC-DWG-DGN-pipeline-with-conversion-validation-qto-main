@@ -691,34 +691,41 @@ async def extract_excel_data(file: UploadFile = File(...)):
 
                 # Find construction-related columns
                 column_mapping = {}
-                for col in df.columns:
-                    col_str = str(col).lower()
-                    # Material/element name columns - includes 'name' for CAD exports
-                    if 'material' in col_str or 'description' in col_str or 'item' in col_str or 'layer' in col_str or 'materjal' in col_str or 'kirjeldus' in col_str or 'nimetus' in col_str or col_str == 'name':
-                        column_mapping['material'] = col
-                    if 'quantity' in col_str or 'amount' in col_str or 'qty' in col_str or 'count' in col_str or 'length' in col_str or 'area' in col_str or 'volume' in col_str or 'kogus' in col_str or 'maht' in col_str:
-                        column_mapping['quantity'] = col
-                    if 'unit' in col_str or 'type' in col_str or 'ühik' in col_str or 'mõõt' in col_str or 'tyyp' in col_str:
-                        column_mapping['unit'] = col
-                    if 'price' in col_str or 'cost' in col_str or 'total' in col_str or 'hind' in col_str or 'maksumus' in col_str or 'summa' in col_str:
-                        column_mapping['price'] = col
                 
-                # CAD export fallback - if no material column found but has CAD-like columns
-                if 'material' not in column_mapping:
-                    cad_columns = ['Handle', 'ParentID', 'Color', 'Linetype', 'Lineweight']
-                    has_cad_data = any(col in df.columns for col in cad_columns)
-                    if has_cad_data and 'Name' in df.columns:
-                        column_mapping['material'] = 'Name'
-                        # Map CAD geometric columns
-                        if 'Area' in df.columns:
-                            column_mapping['area'] = 'Area'
-                        if 'Length' in df.columns:
-                            column_mapping['length'] = 'Length'
-                        if 'Perimeter' in df.columns:
-                            column_mapping['perimeter'] = 'Perimeter'
-                        if 'Radius' in df.columns:
-                            column_mapping['radius'] = 'Radius'
-                        logger.info(f"Detected CAD export format, using 'Name' column and geometric data: {list(column_mapping.keys())}")
+                # FIRST: Check if this is CAD export data (has Handle, Color, Linetype columns)
+                cad_columns = ['Handle', 'ParentID', 'Color', 'Linetype', 'Lineweight']
+                has_cad_data = sum(1 for col in cad_columns if col in df.columns) >= 3
+                
+                if has_cad_data and 'Name' in df.columns:
+                    # This is CAD export - use Name column for elements
+                    column_mapping['material'] = 'Name'
+                    # Map CAD geometric columns
+                    if 'Area' in df.columns:
+                        column_mapping['area'] = 'Area'
+                    if 'Length' in df.columns:
+                        column_mapping['length'] = 'Length'
+                    if 'Perimeter' in df.columns:
+                        column_mapping['perimeter'] = 'Perimeter'
+                    if 'Radius' in df.columns:
+                        column_mapping['radius'] = 'Radius'
+                    logger.info(f"Detected CAD export format, using 'Name' column and geometric data: {list(column_mapping.keys())}")
+                else:
+                    # Standard Excel - search for familiar column names
+                    for col in df.columns:
+                        col_str = str(col).lower()
+                        # Material/element name columns
+                        if 'material' in col_str or 'item' in col_str or 'element' in col_str or 'materjal' in col_str or 'kirjeldus' in col_str or 'nimetus' in col_str:
+                            if 'material' not in column_mapping:
+                                column_mapping['material'] = col
+                        # Description can also be material name
+                        if 'description' in col_str and 'material' not in column_mapping:
+                            column_mapping['material'] = col
+                        if 'quantity' in col_str or 'amount' in col_str or 'qty' in col_str or 'count' in col_str or 'kogus' in col_str or 'maht' in col_str:
+                            column_mapping['quantity'] = col
+                        if col_str == 'unit' or 'ühik' in col_str or 'mõõt' in col_str:
+                            column_mapping['unit'] = col
+                        if 'price' in col_str or 'cost' in col_str or 'hind' in col_str or 'maksumus' in col_str:
+                            column_mapping['price'] = col
                 
                 logger.info(f"Column mapping for '{sheet_name}': {column_mapping}")
 
