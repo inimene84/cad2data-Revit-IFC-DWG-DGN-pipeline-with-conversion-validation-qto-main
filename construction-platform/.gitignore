@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.logs
+
+# Temporary
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+
+# Build
+build/
+dist/
+*.build
+
+# Test
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.nyc_output/
+coverage/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Docker
+.dockerignore
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+
+# Uploads and outputs
+uploads/*
+!uploads/.gitkeep
+output/*
+!output/.gitkeep

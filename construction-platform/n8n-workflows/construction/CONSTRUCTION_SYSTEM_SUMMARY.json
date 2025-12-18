@@ -1,0 +1,135 @@
+{
+  "construction_ai_system": {
+    "version": "2.1.0",
+    "created": "2025-10-06",
+    "description": "Complete AI-powered construction project management system for Estonian market",
+    "total_workflows": 11,
+    "total_nodes": 49,
+    "manager_workflow": {
+      "nodes": 25,
+      "connections": 22,
+      "sub_agents": 10,
+      "ai_models": [
+        "Gemini 1.5 Pro",
+        "GPT-4o Mini"
+      ],
+      "integrations": [
+        "Telegram",
+        "Google Drive",
+        "Google Sheets",
+        "Perplexity AI",
+        "OCR.space"
+      ]
+    },
+    "workflows": {
+      "02_Data_Extraction_Agent": {
+        "name": "\ud83d\udd0d Data Extraction Agent - Advanced OCR & AI Construction Analysis",
+        "nodes": 4,
+        "version": "2.1.0",
+        "description": "Advanced OCR processing and AI analysis of construction documents with Estonian standards integration"
+      },
+      "03_Materials_Accounting_Agent": {
+        "name": "\ud83d\udcb0 Materials Accounting Agent - BOQ & Cost Estimation System",
+        "nodes": 4,
+        "version": "2.1.0",
+        "description": "Professional Bill of Quantities generation with 2025 Estonian market pricing"
+      },
+      "04_Web_Search_Agent": {
+        "name": "\ud83c\udf10 Web Search Agent - Construction Market Intelligence",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "Real-time construction market research via Perplexity AI"
+      },
+      "05_Document_Generation_Agent": {
+        "name": "\ud83d\udcc4 Document Generation Agent - Professional Reports",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "Professional construction document creation in Google Docs"
+      },
+      "06_File_Manager_Agent": {
+        "name": "\ud83d\udcc1 File Manager Agent - Construction File Organization",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "Intelligent construction file management and organization"
+      },
+      "07_Vendor_Agent": {
+        "name": "\ud83c\udfea Vendor Agent - Estonian Supplier Network",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "Estonian construction supplier intelligence and procurement"
+      },
+      "08_Compliance_Agent": {
+        "name": "\u2705 Compliance Agent - Estonian Building Codes",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "Estonian building code compliance and regulatory verification"
+      },
+      "09_Visualization_Agent": {
+        "name": "\ud83d\udcca Visualization Agent - Construction Data Visualization",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "Professional construction charts and data visualization"
+      },
+      "10_BIM_Agent": {
+        "name": "\ud83c\udfd7\ufe0f BIM Agent - Advanced BIM Processing with DDC Integration",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "BIM file processing with DataDrivenConstruction.io tools"
+      },
+      "11_Schedule_Agent": {
+        "name": "\ud83d\udcc5 Schedule Agent - Project Timeline Management",
+        "nodes": 2,
+        "version": "2.1.0",
+        "description": "Construction project scheduling and milestone tracking"
+      },
+      "01_Construction_Manager_Agent": {
+        "name": "\ud83c\udfd7\ufe0f Construction AI Manager Agent - Complete System",
+        "nodes": 25,
+        "version": "2.1.0",
+        "description": ""
+      }
+    },
+    "features": [
+      "Advanced OCR and AI document analysis",
+      "Professional BOQ generation with Estonian pricing",
+      "Real-time supplier intelligence via Perplexity AI",
+      "Estonian building code compliance verification",
+      "BIM processing with DataDrivenConstruction.io integration",
+      "Professional Google Docs report generation",
+      "Construction file organization and management",
+      "Data visualization with construction themes",
+      "Project timeline and milestone tracking",
+      "Comprehensive activity logging and analytics"
+    ],
+    "estonian_market_focus": {
+      "currency": "EUR",
+      "units": "Metric (m, m\u00b2, m\u00b3, kg, tons)",
+      "standards": "EVS-EN European standards",
+      "suppliers": [
+        "K-Rauta",
+        "Bauhof",
+        "Stokker",
+        "Ehituse ABC",
+        "Betoonimeister"
+      ],
+      "regulations": "Estonian building codes and fire safety"
+    },
+    "technical_requirements": {
+      "n8n_version": "1.0+",
+      "credentials_needed": 8,
+      "google_apis_required": [
+        "Drive",
+        "Sheets",
+        "Docs",
+        "Vertex AI"
+      ],
+      "external_apis": [
+        "Telegram Bot",
+        "OCR.space",
+        "Perplexity AI",
+        "OpenAI"
+      ],
+      "storage_requirements": "Google Drive folder and 2 Google Sheets"
+    }
+  }
+}

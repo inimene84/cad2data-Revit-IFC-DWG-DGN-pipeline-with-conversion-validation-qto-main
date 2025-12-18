@@ -1,0 +1,9 @@
+requirement,description,required
+Element ID,Unique identifier for each element,Yes
+Element Type,Category/type of construction element,Yes
+Dimensions,"Length, width, height, thickness",Yes
+Quantities,"Volume, area, length, count",Yes
+Materials,Material specifications and properties,Yes
+Location,"Floor, room, coordinates",Yes
+Cost Data,"Unit costs, labor rates, equipment",No
+Schedule,"Construction sequence, dependencies",No

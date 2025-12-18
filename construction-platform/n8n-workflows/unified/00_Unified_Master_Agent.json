@@ -1,0 +1,288 @@
+{
+  "name": "🏗️ Unified Construction AI Platform - Master Agent v2.0",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "id": "manual-trigger-001",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "construction-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "id": "webhook-trigger-001",
+      "name": "Webhook Trigger",
+      "webhookId": "unified-construction-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        540,
+        300
+      ],
+      "id": "input-router-001",
+      "name": "Input Router"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Unified Construction AI Platform - Request Analyzer (Upgraded)\n// Analyzes input and routes to appropriate agents with project context support\n\nconst input = $input.first().json;\nconst body = input.body || input;\nconst query = input.query || {};\nconst headers = input.headers || {};\n\n// Extract request type\nconst requestType = body.requestType || body.type || query.type || 'unknown';\nconst fileType = body.fileType || body.file?.type || query.fileType || '';\nconst action = body.action || query.action || 'process';\nconst fileExtension = body.fileExtension || body.file?.extension || query.fileExtension || '';\n\n// Extract project context (NEW)\nconst projectId = body.projectId || body.project?.id || query.projectId || headers['x-project-id'] || null;\nconst projectName = body.projectName || body.project?.name || query.projectName || headers['x-project-name'] || null;\nconst projectPhase = body.projectPhase || body.project?.phase || query.projectPhase || 'general';\nconst userId = body.userId || body.user?.id || query.userId || headers['x-user-id'] || null;\nconst tenantId = body.tenantId || body.tenant?.id || query.tenantId || headers['x-tenant-id'] || null;\n\n// Determine file category\nlet fileCategory = 'unknown';\nif (fileExtension) {\n    const ext = fileExtension.toLowerCase();\n    if (['.rvt', '.ifc', '.dwg', '.dgn'].includes(ext)) {\n        fileCategory = 'cad_bim';\n    } else if (['.pdf', '.jpg', '.png', '.docx'].includes(ext)) {\n        fileCategory = 'document';\n    } else if (['.xlsx', '.csv'].includes(ext)) {\n        fileCategory = 'data';\n    }\n}\n\n// Route mapping\nconst routing = {\n    // CAD-BIM Conversion\n    cad_bim_conversion: {\n        agents: ['cad_bim_conversion'],\n        priority: 1,\n        conditions: [\n            fileCategory === 'cad_bim',\n            requestType === 'convert',\n            action === 'convert',\n            fileExtension.match(/\\.(rvt|ifc|dwg|dgn)$/i)\n        ]\n    },\n    \n    // CAD-BIM Validation\n    cad_bim_validation: {\n        agents: ['cad_bim_validation'],\n        priority: 2,\n        conditions: [\n            requestType === 'validate',\n            action === 'validate',\n            body.validation !== undefined\n        ]\n    },\n    \n    // CAD-BIM Classification\n    cad_bim_classification: {\n        agents: ['cad_bim_classification'],\n        priority: 3,\n        conditions: [\n            requestType === 'classify',\n            action === 'classify',\n            body.classification !== undefined\n        ]\n    },\n    \n    // CAD-BIM Cost Estimation\n    cad_bim_cost_estimation: {\n        agents: ['cad_bim_cost_estimation'],\n        priority: 4,\n        conditions: [\n            requestType === 'estimate_cost',\n            action === 'estimate_cost',\n            body.costEstimation !== undefined\n        ]\n    },\n    \n    // CAD-BIM Carbon Footprint\n    cad_bim_carbon_footprint: {\n        agents: ['cad_bim_carbon_footprint'],\n        priority: 5,\n        conditions: [\n            requestType === 'carbon_footprint',\n            action === 'carbon_footprint',\n            body.carbonFootprint !== undefined\n        ]\n    },\n    \n    // CAD-BIM Quantity Takeoff\n    cad_bim_quantity_takeoff: {\n        agents: ['cad_bim_quantity_takeoff'],\n        priority: 6,\n        conditions: [\n            requestType === 'quantity_takeoff',\n            action === 'quantity_takeoff',\n            body.quantityTakeoff !== undefined\n        ]\n    },\n    \n    // Construction Data Extraction\n    construction_data_extraction: {\n        agents: ['construction_data_extraction'],\n        priority: 7,\n        conditions: [\n            requestType === 'extract_data',\n            action === 'extract_data',\n            fileCategory === 'document'\n        ]\n    },\n    \n    // Construction Materials\n    construction_materials: {\n        agents: ['construction_materials'],\n        priority: 8,\n        conditions: [\n            requestType === 'materials',\n            action === 'materials',\n            body.materials !== undefined\n        ]\n    },\n    \n    // Construction Documents\n    construction_documents: {\n        agents: ['construction_documents'],\n        priority: 9,\n        conditions: [\n            requestType === 'generate_document',\n            action === 'generate_document',\n            body.documentGeneration !== undefined\n        ]\n    },\n    \n    // Construction File Management\n    construction_file_management: {\n        agents: ['construction_file_management'],\n        priority: 10,\n        conditions: [\n            requestType === 'file_management',\n            action === 'file_management',\n            body.fileManagement !== undefined\n        ]\n    },\n    \n    // Construction Vendor\n    construction_vendor: {\n        agents: ['construction_vendor'],\n        priority: 11,\n        conditions: [\n            requestType === 'vendor',\n            action === 'vendor',\n            body.vendor !== undefined\n        ]\n    },\n    \n    // Construction Compliance\n    construction_compliance: {\n        agents: ['construction_compliance'],\n        priority: 12,\n        conditions: [\n            requestType === 'compliance',\n            action === 'compliance',\n            body.compliance !== undefined\n        ]\n    },\n    \n    // Construction Visualization\n    construction_visualization: {\n        agents: ['construction_visualization'],\n        priority: 13,\n        conditions: [\n            requestType === 'visualization',\n            action === 'visualization',\n            body.visualization !== undefined\n        ]\n    },\n    \n    // Construction BIM\n    construction_bim: {\n        agents: ['construction_bim'],\n        priority: 14,\n        conditions: [\n            requestType === 'bim',\n            action === 'bim',\n            body.bim !== undefined\n        ]\n    },\n    \n    // Construction Scheduling\n    construction_scheduling: {\n        agents: ['construction_scheduling'],\n        priority: 15,\n        conditions: [\n            requestType === 'scheduling',\n            action === 'scheduling',\n            body.scheduling !== undefined\n        ]\n    },\n    \n    // Construction 3D Vision\n    construction_3d_vision: {\n        agents: ['construction_3d_vision'],\n        priority: 16,\n        conditions: [\n            requestType === '3d_vision',\n            action === '3d_vision',\n            body.vision3d !== undefined\n        ]\n    }\n};\n\n// Find matching route\nlet selectedRoute = null;\nlet maxPriority = 0;\n\nfor (const [routeName, routeConfig] of Object.entries(routing)) {\n    const matchCount = routeConfig.conditions.filter(c => c === true).length;\n    if (matchCount > 0 && routeConfig.priority > maxPriority) {\n        selectedRoute = routeName;\n        maxPriority = routeConfig.priority;\n    }\n}\n\n// Default route if no match\nif (!selectedRoute) {\n    selectedRoute = 'cad_bim_conversion'; // Default to conversion\n}\n\n// Prepare output with project context\nconst output = {\n    route: selectedRoute,\n    agents: routing[selectedRoute]?.agents || ['cad_bim_conversion'],\n    requestType: requestType,\n    fileType: fileType,\n    fileCategory: fileCategory,\n    action: action,\n    originalInput: body,\n    // Project context (NEW)\n    project: {\n        id: projectId,\n        name: projectName,\n        phase: projectPhase\n    },\n    user: {\n        id: userId\n    },\n    tenant: {\n        id: tenantId\n    },\n    metadata: {\n        timestamp: new Date().toISOString(),\n        priority: maxPriority,\n        confidence: maxPriority > 0 ? 'high' : 'low',\n        executionId: (projectId || 'global') + '_' + Date.now(), // Unique execution ID\n        workflowVersion: '2.0.0', // Version tracking\n        hasProjectContext: !!(projectId && projectName)\n    }\n};\n\nreturn [{ json: output }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ],
+      "id": "request-analyzer-001",
+      "name": "Request Analyzer"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-cad-bim-conversion",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "cad_bim_conversion",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "CAD-BIM Conversion"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-cad-bim-validation",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "cad_bim_validation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "CAD-BIM Validation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-cad-bim-classification",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "cad_bim_classification",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "CAD-BIM Classification"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-cad-bim-cost-estimation",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "cad_bim_cost_estimation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "CAD-BIM Cost Estimation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-construction-data-extraction",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "construction_data_extraction",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Construction Data Extraction"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "route-construction-materials",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "construction_materials",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Construction Materials"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "default"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1140,
+        300
+      ],
+      "id": "agent-router-001",
+      "name": "Agent Router"
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Router": {
+      "main": [
+        [
+          {
+            "node": "Request Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Agent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": false,
+    "timezone": "Europe/Tallinn"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "unified",
+      "name": "unified"
+    },
+    {
+      "id": "master",
+      "name": "master"
+    },
+    {
+      "id": "construction",
+      "name": "construction"
+    },
+    {
+      "id": "cad_bim",
+      "name": "cad_bim"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "2.0.0"
+}

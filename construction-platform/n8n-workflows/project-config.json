@@ -1,0 +1,119 @@
+{
+  "version": "2.0.0",
+  "description": "Project Configuration Template for Construction AI Platform Workflows",
+  "created_at": "2025-01-15T00:00:00.000Z",
+  "projects": {
+    "default": {
+      "id": "default",
+      "name": "Default Project",
+      "phase": "general",
+      "settings": {
+        "timezone": "Europe/Tallinn",
+        "currency": "EUR",
+        "units": "metric",
+        "locale": "et-EE",
+        "standards": ["EVS-EN"],
+        "suppliers": [
+          "K-Rauta",
+          "Bauhof",
+          "Stokker",
+          "Ehituse ABC",
+          "Betoonimeister"
+        ]
+      },
+      "workflows": {
+        "enabled": "all",
+        "priorities": {
+          "cad_bim_conversion": 1,
+          "cad_bim_validation": 2,
+          "cad_bim_classification": 3,
+          "cad_bim_cost_estimation": 4,
+          "cad_bim_carbon_footprint": 5,
+          "cad_bim_quantity_takeoff": 6,
+          "construction_data_extraction": 7,
+          "construction_materials": 8,
+          "construction_documents": 9,
+          "construction_file_management": 10,
+          "construction_vendor": 11,
+          "construction_compliance": 12,
+          "construction_visualization": 13,
+          "construction_bim": 14,
+          "construction_scheduling": 15,
+          "construction_3d_vision": 16
+        }
+      }
+    },
+    "template": {
+      "id": "{{PROJECT_ID}}",
+      "name": "{{PROJECT_NAME}}",
+      "phase": "{{PROJECT_PHASE}}",
+      "description": "{{PROJECT_DESCRIPTION}}",
+      "settings": {
+        "timezone": "Europe/Tallinn",
+        "currency": "EUR",
+        "units": "metric",
+        "locale": "et-EE",
+        "standards": ["EVS-EN"],
+        "suppliers": [
+          "K-Rauta",
+          "Bauhof",
+          "Stokker",
+          "Ehituse ABC",
+          "Betoonimeister"
+        ],
+        "custom_settings": {}
+      },
+      "workflows": {
+        "enabled": "all",
+        "priorities": {},
+        "custom_workflows": []
+      },
+      "metadata": {
+        "created_at": "{{CREATED_AT}}",
+        "updated_at": "{{UPDATED_AT}}",
+        "created_by": "{{USER_ID}}",
+        "tenant_id": "{{TENANT_ID}}"
+      }
+    }
+  },
+  "configuration": {
+    "error_handling": {
+      "retry_attempts": 3,
+      "retry_delay_seconds": 5,
+      "log_level": "error",
+      "notify_on_error": true
+    },
+    "logging": {
+      "enabled": true,
+      "level": "info",
+      "include_project_context": true,
+      "include_user_context": true
+    },
+    "performance": {
+      "timeout_seconds": 300,
+      "max_concurrent_executions": 10,
+      "cache_enabled": true,
+      "cache_ttl_seconds": 3600
+    },
+    "integrations": {
+      "openai": {
+        "enabled": true,
+        "model": "gpt-4o-mini"
+      },
+      "gemini": {
+        "enabled": true,
+        "model": "gemini-1.5-pro"
+      },
+      "perplexity": {
+        "enabled": true
+      },
+      "google_drive": {
+        "enabled": true
+      },
+      "telegram": {
+        "enabled": false
+      }
+    }
+  }
+}
+

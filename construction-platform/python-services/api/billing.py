@@ -5,6 +5,11 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import logging
 from decimal import Decimal
+import os
+
+# VAT Configuration
+VAT_RATE = Decimal(os.getenv("VAT_RATE", "0.24"))  # Estonia 24%
+VAT_COUNTRY = os.getenv("VAT_COUNTRY", "EE")
 
 logger = logging.getLogger(__name__)
 
@@ -99,8 +104,12 @@ class BillingManager:
                 usage_cost = Decimal("0.0")
                 usage_stats = {}
             
-            # Calculate total
-            total_cost = base_cost + usage_cost
+            # Calculate total (before VAT)
+            subtotal = base_cost + usage_cost
+            
+            # Calculate VAT
+            vat_amount = subtotal * VAT_RATE
+            total_with_vat = subtotal + vat_amount
             
             invoice = {
                 "tenant_id": tenant_id,
@@ -108,13 +117,17 @@ class BillingManager:
                 "invoice_date": datetime.now().isoformat(),
                 "base_cost": float(base_cost),
                 "usage_cost": float(usage_cost),
-                "total_cost": float(total_cost),
+                "subtotal": float(subtotal),
+                "vat_rate": float(VAT_RATE),
+                "vat_country": VAT_COUNTRY,
+                "vat_amount": float(vat_amount),
+                "total_cost": float(total_with_vat),
                 "usage_stats": usage_stats,
                 "plan": tenant_plan["name"],
                 "status": "pending"
             }
             
-            logger.info(f"Invoice generated: {tenant_id}, ${total_cost}")
+            logger.info(f"Invoice generated: {tenant_id}, €{total_with_vat} (incl. VAT)")
             return invoice
         except Exception as e:
             logger.error(f"Failed to generate invoice: {e}")
@@ -133,12 +146,21 @@ class BillingManager:
                 usage_cost = Decimal("0.0")
                 usage_stats = {}
             
+            # Calculate totals with VAT
+            subtotal = Decimal(str(tenant_plan["price"])) + usage_cost
+            vat_amount = subtotal * VAT_RATE
+            total_with_vat = subtotal + vat_amount
+            
             summary = {
                 "tenant_id": tenant_id,
                 "plan": tenant_plan["name"],
                 "base_cost": float(Decimal(str(tenant_plan["price"]))),
                 "usage_cost": float(usage_cost),
-                "total_cost": float(Decimal(str(tenant_plan["price"])) + usage_cost),
+                "subtotal": float(subtotal),
+                "vat_rate": float(VAT_RATE),
+                "vat_country": VAT_COUNTRY,
+                "vat_amount": float(vat_amount),
+                "total_cost": float(total_with_vat),
                 "usage_stats": usage_stats,
                 "limits": {
                     "file_upload_limit": tenant_plan["file_upload_limit"],

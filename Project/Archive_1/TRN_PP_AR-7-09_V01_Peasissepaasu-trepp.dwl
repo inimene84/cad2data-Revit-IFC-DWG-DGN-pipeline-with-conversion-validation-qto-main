@@ -1,0 +1,3 @@
+PC
+DESKTOP-23D5L9M 
+kolmapäev, 17. juuli 2024  20:15:58

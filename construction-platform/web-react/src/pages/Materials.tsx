@@ -46,6 +46,7 @@ const Materials = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [vatRate, setVatRate] = useState(0.24); // Default Estonia VAT
   const [formData, setFormData] = useState({
     name: '',
     quantity: 0,
@@ -54,6 +55,15 @@ const Materials = () => {
     supplier: '',
     category: 'construction',
   });
+
+  const fetchVatSettings = async () => {
+    try {
+      const response = await api.get('/v1/settings/vat');
+      setVatRate(response.data.vat_rate);
+    } catch (err) {
+      console.warn('Could not fetch VAT settings, using default 24%');
+    }
+  };
 
   const fetchMaterials = async () => {
     setLoading(true);
@@ -71,6 +81,7 @@ const Materials = () => {
   };
 
   useEffect(() => {
+    fetchVatSettings();
     fetchMaterials();
   }, []);
 
@@ -139,6 +150,8 @@ const Materials = () => {
   };
 
   const totalValue = materials.reduce((sum, m) => sum + m.price * m.quantity, 0);
+  const vatAmount = totalValue * vatRate;
+  const totalWithVat = totalValue + vatAmount;
 
   if (loading && materials.length === 0) {
     return (
@@ -159,7 +172,7 @@ const Materials = () => {
             Materials Database
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {materials.length} materials • Total value: €{totalValue.toLocaleString('et-EE', { minimumFractionDigits: 2 })}
+            {materials.length} materials • Subtotal: €{totalValue.toLocaleString('et-EE', { minimumFractionDigits: 2 })} • VAT ({Math.round(vatRate * 100)}%): €{vatAmount.toLocaleString('et-EE', { minimumFractionDigits: 2 })} • <strong>Total: €{totalWithVat.toLocaleString('et-EE', { minimumFractionDigits: 2 })}</strong>
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>

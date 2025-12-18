@@ -1,0 +1,37 @@
+{
+  "name": "03_Agent_QA_RAG",
+  "nodes": [
+    {"parameters": {}, "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [280, 300], "name": "Start"},
+    {"parameters": {"assignments": {"assignments": [
+      {"name": "chroma_url", "type": "string", "value": "http://localhost:8000", "id": "a1"},
+      {"name": "project_name", "type": "string", "value": "DemoProject", "id": "a2"}
+    ]}}, "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [520, 300], "name": "Defaults"},
+    {"parameters": {"jsCode": "// Simulate a user query\nreturn [{ json: { query: 'Roof insulation quantities and details?' } }];"}, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [780, 300], "name": "User Query"},
+    {"parameters": {
+      "url": "={{$node['Defaults'].json.chroma_url}}/query",
+      "sendBody": true,
+      "jsonParameters": true,
+      "bodyParametersJson": "={\n  \"collection\": \"{{$node['Defaults'].json.project_name}}\",\n  \"query_texts\": [$json.query],\n  \"n_results\": 8\n}"
+    }, "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1040, 300], "name": "Vector Search (Chroma)"},
+    {"parameters": {"jsCode": "// Prepare context with citations\nconst r = $input.first().json;\nconst docs = (r.documents || [])[0] || [];\nconst metas = (r.metadatas || [])[0] || [];\nconst ctx = docs.map((d, i)=>({ text: d, meta: metas[i] }));\nreturn [{ json: { context: ctx } }];"}, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1300, 300], "name": "Build Context"},
+    {"parameters": {
+      "modelId": {"__rl": true, "value": "gpt-4o-mini", "mode": "list", "cachedResultName": "GPT-4O-MINI"},
+      "messages": {"values": [
+        {"role": "system", "content": "You are a construction assistant. Answer concisely with bullet points and include citations from meta.file/meta.page when available."},
+        {"role": "user", "content": "Question: {{ $json.query }}\nContext: {{ JSON.stringify($node['Build Context'].json.context).slice(0,6000) }}"}
+      ]},
+      "options": {"temperature": 0.1, "maxTokens": 700}
+    }, "type": "@n8n/n8n-nodes-langchain.openAi", "typeVersion": 1.3, "position": [1560, 300], "name": "Answer (LLM)"},
+    {"parameters": {"jsCode": "// Format final answer and echo citations\nconst ans = $input.first().json;\nreturn [{ json: { answer: ans.content || ans.message || '', citations: $node['Build Context'].json.context } }];"}, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1820, 300], "name": "Format Answer"}
+  ],
+  "connections": {
+    "Start": {"main": [[{"node": "Defaults", "type": "main", "index": 0}]]},
+    "Defaults": {"main": [[{"node": "User Query", "type": "main", "index": 0}]]},
+    "User Query": {"main": [[{"node": "Vector Search (Chroma)", "type": "main", "index": 0}]]},
+    "Vector Search (Chroma)": {"main": [[{"node": "Build Context", "type": "main", "index": 0}]]},
+    "Build Context": {"main": [[{"node": "Answer (LLM)", "type": "main", "index": 0}]]},
+    "Answer (LLM)": {"main": [[{"node": "Format Answer", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"}
+}

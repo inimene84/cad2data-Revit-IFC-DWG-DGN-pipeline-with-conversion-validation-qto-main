@@ -1,0 +1,364 @@
+{
+    "name": "n8n_5_Direct_Excel_Classification",
+    "nodes": [
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                400,
+                260
+            ],
+            "id": "trigger-1",
+            "name": "When clicking 'Execute workflow'"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "path-id",
+                            "name": "path_to_file",
+                            "value": "/data/Project/Cleaned_Excel_Files/cleaned_TRN_PP_AR-5-01_V01_Korruseplaan_dwg.xlsx",
+                            "type": "string"
+                        },
+                        {
+                            "id": "group-by-id",
+                            "name": "group_by",
+                            "value": "Category",
+                            "type": "string"
+                        },
+                        {
+                            "id": "classification-id",
+                            "name": "classification_name",
+                            "value": "Omniclass",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "setup-paths",
+            "name": "Setup - Define file paths1",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                600,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "filePath": "={{ $json.path_to_file }}"
+            },
+            "id": "read-excel",
+            "name": "Read Excel File",
+            "type": "n8n-nodes-base.readBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                800,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "fromFile",
+                "options": {}
+            },
+            "id": "parse-excel",
+            "name": "Parse Excel",
+            "type": "n8n-nodes-base.spreadsheetFile",
+            "typeVersion": 2,
+            "position": [
+                1000,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Extract headers and prepare data for AI processing\nconst items = $input.all();\n\nif (items.length === 0) {\n  return [{ json: { error: 'No data found in Excel file' } }];\n}\n\n// Get headers from first item\nconst headers = Object.keys(items[0].json);\nconst setupData = $node['Setup - Define file paths1'].json;\n\n// Prepare data for grouping\nconst groupByField = setupData.group_by || 'Category';\n\n// Group data by the specified field\nconst groups = {};\nitems.forEach(item => {\n  const groupKey = item.json[groupByField] || 'Unknown';\n  if (!groups[groupKey]) {\n    groups[groupKey] = {\n      [groupByField]: groupKey,\n      'Element Count': 0,\n      items: []\n    };\n  }\n  groups[groupKey]['Element Count']++;\n  groups[groupKey].items.push(item.json);\n});\n\n// Convert to array and add sample properties\nconst groupedData = Object.values(groups).map(group => {\n  const sample = group.items[0] || {};\n  return {\n    json: {\n      ...sample,\n      [groupByField]: group[groupByField],\n      'Element Count': group['Element Count']\n    }\n  };\n});\n\nconsole.log(`Grouped ${items.length} items into ${groupedData.length} groups by '${groupByField}'`);\n\nreturn [{\n  json: {\n    headers: headers,\n    totalRows: items.length,\n    groupedData: groupedData.map(g => g.json),\n    groupByField: groupByField,\n    classification_name: setupData.classification_name\n  }\n}];"
+            },
+            "id": "extract-headers",
+            "name": "Extract Headers and Data1",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1200,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "Analyze the following headers from a CAD/BIM export file and identify:\n1. Which headers contain category/classification information\n2. Which headers contain volumetric data (area, volume, length, etc.)\n3. What type of building elements are likely in this file\n\nHeaders: {{ $json.headers.join(', ') }}\n\nSample data groups:\n{{ JSON.stringify($json.groupedData.slice(0, 5), null, 2) }}\n\nRespond in JSON format:\n{\n  \"categoryField\": \"field name or null\",\n  \"volumetricFields\": [\"list\", \"of\", \"fields\"],\n  \"elementTypes\": [\"building element types found\"],\n  \"recommendations\": \"brief analysis\"\n}",
+                "options": {
+                    "systemMessage": "You are an expert in construction data analysis. Analyze CAD/BIM export data headers and provide structured insights."
+                }
+            },
+            "id": "ai-analyze-headers",
+            "name": "AI Analyze All Headers",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.7,
+            "position": [
+                1400,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parse AI response and prepare classification summary\nconst aiResponse = $input.first().json;\nconst headerData = $node['Extract Headers and Data1'].json;\n\nlet analysis = {};\ntry {\n  const content = aiResponse.output || aiResponse.text || JSON.stringify(aiResponse);\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    analysis = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  console.log('Could not parse AI response:', e.message);\n  analysis = { categoryField: null, volumetricFields: [], elementTypes: [], recommendations: 'Analysis failed' };\n}\n\n// Return grouped data for classification\nconst groups = headerData.groupedData;\nconsole.log(`\\nReady to classify ${groups.length} element groups`);\nconsole.log(`Category field: ${analysis.categoryField}`);\nconsole.log(`Volumetric fields: ${analysis.volumetricFields?.length || 0}`);\n\nreturn groups.map(group => ({\n  json: {\n    ...group,\n    _analysis: analysis,\n    _classificationSystem: headerData.classification_name\n  }\n}));"
+            },
+            "id": "process-ai-response",
+            "name": "Process AI Analysis",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1600,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "batchSize": 5,
+                "options": {}
+            },
+            "id": "batch-processing",
+            "name": "Process in Batches",
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 3,
+            "position": [
+                1800,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "Classify this building element using {{ $json._classificationSystem || 'Omniclass' }} classification system.\n\nElement to classify:\n- Category: {{ $json.Category || 'Unknown' }}\n- Type: {{ $json['Type Name'] || $json.Type || 'Unknown' }}\n- Family: {{ $json.Family || 'Unknown' }}\n- Element Count: {{ $json['Element Count'] || 1 }}\n\nRespond in JSON format:\n{\n  \"classification_code\": \"code\",\n  \"classification_name\": \"name\",\n  \"confidence\": 0-100,\n  \"reasoning\": \"why this classification\"\n}",
+                "options": {
+                    "systemMessage": "You are an expert construction classification specialist. Classify building elements according to the specified classification system (Omniclass, Uniclass, MasterFormat, etc.)."
+                }
+            },
+            "id": "ai-classify-element",
+            "name": "AI Classify Element1",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.7,
+            "position": [
+                2000,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parse classification response and enrich data\nconst aiResponse = $input.first().json;\nconst originalData = $node['Process in Batches'].json;\n\nlet classification = {};\ntry {\n  const content = aiResponse.output || aiResponse.text || JSON.stringify(aiResponse);\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    classification = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  classification = {\n    classification_code: 'ERROR',\n    classification_name: 'Classification failed',\n    confidence: 0,\n    reasoning: e.message\n  };\n}\n\nreturn [{\n  json: {\n    ...originalData,\n    Classification_Code: classification.classification_code,\n    Classification_Name: classification.classification_name,\n    Classification_Confidence: classification.confidence,\n    Classification_Reasoning: classification.reasoning,\n    Classification_Timestamp: new Date().toISOString()\n  }\n}];"
+            },
+            "id": "parse-classification",
+            "name": "Parse Classification Result",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2200,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "fileName": "Classification_Results.xlsx",
+                "options": {},
+                "operation": "toFile"
+            },
+            "id": "create-excel",
+            "name": "Create Excel Output",
+            "type": "n8n-nodes-base.spreadsheetFile",
+            "typeVersion": 2,
+            "position": [
+                2400,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "fileName": "={{ 'Classification_Report_' + new Date().toISOString().slice(0,10) + '.xlsx' }}",
+                "options": {}
+            },
+            "id": "write-file",
+            "name": "Write Report to File",
+            "type": "n8n-nodes-base.writeBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                2600,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "modelName": "={{ \"models/gemini-2.5-pro\" }}",
+                "options": {}
+            },
+            "id": "gemini-model",
+            "name": "Google Gemini Chat Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                1400,
+                480
+            ]
+        }
+    ],
+    "connections": {
+        "When clicking 'Execute workflow'": {
+            "main": [
+                [
+                    {
+                        "node": "Setup - Define file paths1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Setup - Define file paths1": {
+            "main": [
+                [
+                    {
+                        "node": "Read Excel File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Read Excel File": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Excel",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Excel": {
+            "main": [
+                [
+                    {
+                        "node": "Extract Headers and Data1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extract Headers and Data1": {
+            "main": [
+                [
+                    {
+                        "node": "AI Analyze All Headers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Analyze All Headers": {
+            "main": [
+                [
+                    {
+                        "node": "Process AI Analysis",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Process AI Analysis": {
+            "main": [
+                [
+                    {
+                        "node": "Process in Batches",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Process in Batches": {
+            "main": [
+                [
+                    {
+                        "node": "AI Classify Element1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Create Excel Output",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Classify Element1": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Classification Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Classification Result": {
+            "main": [
+                [
+                    {
+                        "node": "Process in Batches",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Create Excel Output": {
+            "main": [
+                [
+                    {
+                        "node": "Write Report to File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Analyze All Headers",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "AI Classify Element1",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": {
+        "templateCredsSetupCompleted": true
+    }
+}

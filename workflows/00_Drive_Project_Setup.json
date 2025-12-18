@@ -1,0 +1,64 @@
+{
+  "name": "00_Drive_Project_Setup",
+  "nodes": [
+    {"parameters": {}, "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [300, 300], "name": "Start"},
+    {
+      "parameters": {"assignments": {"assignments": [
+        {"name": "drive_root", "type": "string", "value": "Drive/Projects", "id": "s1"},
+        {"name": "project_name", "type": "string", "value": "DemoProject", "id": "s2"}
+      ]}}, 
+      "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [560, 300], "name": "Project Config"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5057/create-project",
+        "sendBody": true,
+        "jsonParameters": true,
+        "bodyParametersJson": "={\n  \"project_name\": $json.project_name,\n  \"drive_root\": $json.drive_root\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [820, 300], "name": "Get Folder Structure"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create folders in Google Drive\nconst structure = $input.first().json;\nconst folders = structure.folders || [];\n\n// This would create actual Drive folders\n// For now, return the structure for manual creation\nreturn folders.map(folder => ({\n  json: {\n    name: folder.name,\n    path: folder.path,\n    description: folder.description,\n    project: structure.project_name\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1080, 300], "name": "Create Drive Folders"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "folderId": "root",
+        "name": "={{$json.project}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive", "typeVersion": 3, "position": [1340, 300], "name": "Create Project Root"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "folderId": "={{$json.id}}",
+        "name": "={{$json.name}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive", "typeVersion": 3, "position": [1600, 300], "name": "Create Subfolders"
+    },
+    {
+      "parameters": {
+        "subject": "Project Setup Complete: {{$node['Project Config'].json.project_name}}",
+        "text": "Project folders created in Google Drive:\n\n{{$node['Get Folder Structure'].json.folders.map(f => f.name).join('\\n')}}\n\nProject Path: {{$node['Get Folder Structure'].json.project_path}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.gmail", "typeVersion": 2, "position": [1860, 300], "name": "Notify Setup Complete"
+    }
+  ],
+  "connections": {
+    "Start": {"main": [[{"node": "Project Config", "type": "main", "index": 0}]]},
+    "Project Config": {"main": [[{"node": "Get Folder Structure", "type": "main", "index": 0}]]},
+    "Get Folder Structure": {"main": [[{"node": "Create Drive Folders", "type": "main", "index": 0}]]},
+    "Create Drive Folders": {"main": [[{"node": "Create Project Root", "type": "main", "index": 0}]]},
+    "Create Project Root": {"main": [[{"node": "Create Subfolders", "type": "main", "index": 0}]]},
+    "Create Subfolders": {"main": [[{"node": "Notify Setup Complete", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"}
+}

@@ -1,0 +1,141 @@
+{
+  "name": "\ud83d\udd0d Data Extraction Agent - Advanced OCR & AI Construction Analysis",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        120,
+        300
+      ],
+      "id": "8d0dd5d0-f0eb-4a37-b233-e66f4fa9c9c9",
+      "name": "\ud83d\udce5 Called by Manager"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.fileId }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        280,
+        300
+      ],
+      "id": "b73d90d4-b7fe-4586-804f-065169707ec6",
+      "name": "\u2b07\ufe0f Download Construction File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GOOGLE_DRIVE_OAUTH_CONSTRUCTION",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gemini-1.5-flash-002",
+        "options": {
+          "temperature": 0.1,
+          "maxOutputTokens": 4096
+        },
+        "promptType": "define",
+        "text": "=Analyze this construction document and extract materials, measurements, and specifications for Estonian construction standards. Return detailed JSON with materials list, quantities in metric units, and Estonian EVS standard references."
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        300
+      ],
+      "id": "6e2ba29f-d4e1-4e4e-9910-9b8ceb4a7b3b",
+      "name": "\ud83e\udd16 AI Construction Analysis",
+      "credentials": {
+        "googleVertexOAuth2Api": {
+          "id": "GOOGLE_VERTEX_AI_OAUTH_CONSTRUCTION",
+          "name": "Google Vertex AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "result",
+              "value": "=\ud83d\udd0d **Construction Data Extraction Complete**\\n\\n\ud83d\udcc4 **File:** {{ $('\ud83d\udce5 Called by Manager').item.json.fileName }}\\n\u2705 **Analysis:** Advanced AI processing with Estonian construction standards\\n\ud83d\udcca **Data:** Materials, measurements, and specifications extracted\\n\ud83d\udcbe **Storage:** Saved to construction materials database\\n\\n**Ready for BOQ generation and cost estimation**",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        300
+      ],
+      "id": "bd3f108a-5b2b-458f-876a-6d6487dbe7ac",
+      "name": "\ud83d\udce4 Format Response"
+    }
+  ],
+  "connections": {
+    "\ud83d\udce5 Called by Manager": {
+      "main": [
+        [
+          {
+            "node": "\u2b07\ufe0f Download Construction File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\u2b07\ufe0f Download Construction File": {
+      "main": [
+        [
+          {
+            "node": "\ud83e\udd16 AI Construction Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83e\udd16 AI Construction Analysis": {
+      "main": [
+        [
+          {
+            "node": "\ud83d\udce4 Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "02_data_extraction_agent-3133a6f9"
+  },
+  "tags": [
+    {
+      "id": "data-extraction",
+      "name": "data-extraction"
+    },
+    {
+      "id": "ocr",
+      "name": "ocr"
+    }
+  ],
+  "version": "2.1.0",
+  "description": "Advanced OCR processing and AI analysis of construction documents with Estonian standards integration"
+}

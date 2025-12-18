@@ -1,0 +1,91 @@
+{
+  "name": "Agent: Construction File Management v2.0",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "id": "construction_file_management-trigger-001",
+      "name": "Called by Master"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construction File Management Agent v2.0\n// Extracts project context and processes file management request\n\nconst input = $input.first().json;\nconst data = input.data || input;\n\n// Extract project context from routing data\nconst project = data.project || input.project || {};\nconst user = data.user || input.user || {};\nconst tenant = data.tenant || input.tenant || {};\nconst metadata = data.metadata || input.metadata || {};\nconst originalInput = data.originalInput || input.originalInput || data;\n\n// Prepare enhanced request with project context\nconst enhancedRequest = {\n  ...originalInput,\n  project: {\n    id: project.id || originalInput.projectId || originalInput.project?.id || null,\n    name: project.name || originalInput.projectName || originalInput.project?.name || null,\n    phase: project.phase || originalInput.projectPhase || originalInput.project?.phase || 'general'\n  },\n  user: {\n    id: user.id || originalInput.userId || originalInput.user?.id || null\n  },\n  tenant: {\n    id: tenant.id || originalInput.tenantId || originalInput.tenant?.id || null\n  },\n  metadata: {\n    ...metadata,\n    agentName: 'construction_file_management',\n    agentVersion: '2.0.0',\n    executionId: metadata.executionId || (project.id || 'global') + '_' + Date.now(),\n    hasProjectContext: !!(project.id || originalInput.projectId)\n  }\n};\n\nreturn [{ json: enhancedRequest }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "id": "project-context-extractor-001",
+      "name": "Extract Project Context"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Enhanced Response Formatter v2.0\n// Formats response with project context\n\nconst input = $input.first().json;\nconst result = input.result || input;\nconst request = $('Extract Project Context').first().json;\n\n// Build response with project context\nconst response = {\n  success: true,\n  data: result,\n  project: request.project,\n  user: request.user,\n  tenant: request.tenant,\n  metadata: {\n    ...request.metadata,\n    timestamp: new Date().toISOString(),\n    agentName: 'construction_file_management',\n    agentVersion: '2.0.0'\n  },\n  message: 'Construction file management completed successfully'\n};\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ],
+      "id": "response-formatter-001",
+      "name": "Format Response"
+    }
+  ],
+  "connections": {
+    "Called by Master": {
+      "main": [
+        [
+          {
+            "node": "Extract Project Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Project Context": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Europe/Tallinn"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "agent",
+      "name": "agent"
+    },
+    {
+      "id": "construction_file_management",
+      "name": "construction_file_management"
+    },
+    {
+      "id": "v2.0",
+      "name": "v2.0"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "2.0.0"
+}

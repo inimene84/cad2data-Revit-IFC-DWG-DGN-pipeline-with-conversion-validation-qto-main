@@ -1,0 +1,207 @@
+# Minimal Docker Compose for systems with limited disk space (7-8 GB)
+# This configuration excludes optional services to reduce build size
+
+services:
+  # ===== Core Application Services =====
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: construction-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: construction_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - construction-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: construction-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - construction-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: construction-qdrant
+    restart: unless-stopped
+    ports:
+      - "16333:6333"
+      - "16334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - construction-network
+
+  # ===== N8N Workflow Automation =====
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    container_name: construction-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env.production
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - N8N_METRICS=false
+      - N8N_REDIS_URL=redis://redis:6379
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/workflows
+      - ./cad-converters:/converters
+    networks:
+      - construction-network
+    depends_on:
+      - redis
+      - postgres
+      - qdrant
+
+  # ===== FastAPI Backend =====
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: construction-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.production
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/construction_ai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QDRANT_URL=http://qdrant:6333
+    volumes:
+      - ./uploads:/app/uploads
+      - ./output:/app/output
+    networks:
+      - construction-network
+    depends_on:
+      - postgres
+      - redis
+      - qdrant
+
+  # ===== React Web UI =====
+  ui:
+    build:
+      context: ./web-react
+      dockerfile: Dockerfile
+    container_name: construction-ui
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    env_file:
+      - .env.production
+    environment:
+      - REACT_APP_API_URL=/api
+      - REACT_APP_N8N_URL=http://localhost:5678
+    networks:
+      - construction-network
+    depends_on:
+      - api
+
+  # ===== CAD Converter Services (Only DWG - most commonly used) =====
+  # NOTE: Each converter service with Wine is ~1-2 GB
+  # Only include the one you need most, or build them separately
+
+  dwg-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.converter
+    container_name: construction-dwg-service
+    restart: unless-stopped
+    ports:
+      - "5055:5055"
+    env_file:
+      - .env.production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./output:/app/output
+      - ./cad-converters:/app/converters
+    networks:
+      - construction-network
+    # Uncomment if you need OCR or Drive services:
+    # depends_on:
+    #   - api
+
+    # OCR Service
+  ocr-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ocr
+    container_name: construction-ocr-service
+    restart: unless-stopped
+    ports:
+      - "5056:5056"
+    env_file:
+      - .env.production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./output:/app/output
+    networks:
+      - construction-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5056/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Drive Service
+  drive-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.drive
+    container_name: construction-drive-service
+    restart: unless-stopped
+    ports:
+      - "5057:5057"
+    env_file:
+      - .env.production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./output:/app/output
+    networks:
+      - construction-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5057/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  n8n_data:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+
+
+networks:
+  construction-network:
+    driver: bridge

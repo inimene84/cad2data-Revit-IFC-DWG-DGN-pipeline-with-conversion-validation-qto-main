@@ -248,3 +248,210 @@ async def get_work_item(rate_code: str, lang: str = Query("en")):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get item: {str(e)}")
+
+
+# ===== BULK COST ESTIMATION ENDPOINT =====
+
+class MaterialItem(BaseModel):
+    """Input material/work item for cost estimation"""
+    name: str
+    quantity: float = 1.0
+    unit: str = "unit"
+    category: Optional[str] = None
+
+
+class EstimatedItem(BaseModel):
+    """Estimated cost for a single item"""
+    input_name: str
+    input_quantity: float
+    input_unit: str
+    category: str
+    ddc_rate_code: str
+    ddc_name: str
+    ddc_unit: str
+    unit_price: float
+    labor_hours: float
+    total_net: float
+    vat_rate: float
+    vat_amount: float
+    total_gross: float
+    confidence_percent: int
+
+
+class BulkEstimationRequest(BaseModel):
+    """Request for bulk cost estimation"""
+    materials: List[MaterialItem]
+    language: str = "en"
+    country: str = "EE"  # ISO 2-letter code
+
+
+class BulkEstimationResponse(BaseModel):
+    """Full cost estimation response"""
+    project_name: Optional[str] = None
+    country: str
+    currency: str
+    vat_rate: float
+    total_net: float
+    total_vat: float
+    total_gross: float
+    total_labor_hours: float
+    items_count: int
+    avg_confidence: int
+    items: List[EstimatedItem]
+    cost_by_category: dict
+    generated_at: str
+
+
+# VAT rates by country
+VAT_RATES = {
+    "EE": 0.24,  # Estonia
+    "FI": 0.255, # Finland
+    "DE": 0.19,  # Germany
+    "LV": 0.21,  # Latvia
+    "LT": 0.21,  # Lithuania
+    "PL": 0.23,  # Poland
+    "SE": 0.25,  # Sweden
+    "NO": 0.25,  # Norway
+    "DK": 0.25,  # Denmark
+}
+
+
+@router.post("/estimate", response_model=BulkEstimationResponse)
+async def bulk_cost_estimation(request: BulkEstimationRequest):
+    """
+    Bulk cost estimation for multiple materials/work items.
+    
+    Takes a list of materials with quantities and returns complete cost
+    breakdown using DDC CWICR database pricing with VAT calculation.
+    """
+    from datetime import datetime
+    
+    try:
+        from qdrant_client import QdrantClient
+        from openai import OpenAI
+        
+        # Get VAT rate for country
+        vat_rate = VAT_RATES.get(request.country.upper(), 0.24)
+        
+        # Validate language
+        if request.language.lower() not in AVAILABLE_COLLECTIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Language '{request.language}' not available"
+            )
+        
+        collection_name = AVAILABLE_COLLECTIONS[request.language.lower()]
+        
+        # Initialize clients
+        qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+        
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="OPENAI_API_KEY not configured")
+        
+        openai = OpenAI(api_key=OPENAI_API_KEY)
+        
+        # Process each material
+        estimated_items = []
+        total_net = 0.0
+        total_vat = 0.0
+        total_gross = 0.0
+        total_labor_hours = 0.0
+        total_confidence = 0
+        cost_by_category = {}
+        
+        for material in request.materials:
+            # Generate embedding
+            embedding_response = openai.embeddings.create(
+                input=material.name,
+                model="text-embedding-3-large"
+            )
+            query_vector = embedding_response.data[0].embedding
+            
+            # Search QDRANT
+            search_result = qdrant.query_points(
+                collection_name=collection_name,
+                query=query_vector,
+                limit=1
+            )
+            
+            # Get best match
+            if search_result.points:
+                best = search_result.points[0]
+                payload = best.payload or {}
+                pf = payload.get("payload_full", {})
+                cost = pf.get("cost_summary", {})
+                hierarchy = pf.get("hierarchy", {})
+                
+                unit_price = cost.get("total_cost_position", 0) or 0
+                labor_hours = (cost.get("worker_labor_hours", 0) or 0)
+                confidence = int(best.score * 100)
+                ddc_name = pf.get("rate_name", "")
+                ddc_rate_code = pf.get("rate_code", "")
+                ddc_unit = pf.get("rate_unit", "")
+                category = material.category or hierarchy.get("department_name", "Other")
+            else:
+                unit_price = 0
+                labor_hours = 0
+                confidence = 0
+                ddc_name = "Not found"
+                ddc_rate_code = ""
+                ddc_unit = ""
+                category = material.category or "Other"
+            
+            # Calculate costs
+            item_net = unit_price * material.quantity
+            item_vat = item_net * vat_rate
+            item_gross = item_net + item_vat
+            item_labor = labor_hours * material.quantity
+            
+            # Add to totals
+            total_net += item_net
+            total_vat += item_vat
+            total_gross += item_gross
+            total_labor_hours += item_labor
+            total_confidence += confidence
+            
+            # Track by category
+            if category not in cost_by_category:
+                cost_by_category[category] = {"count": 0, "cost": 0}
+            cost_by_category[category]["count"] += 1
+            cost_by_category[category]["cost"] += item_gross
+            
+            estimated_items.append(EstimatedItem(
+                input_name=material.name,
+                input_quantity=material.quantity,
+                input_unit=material.unit,
+                category=category,
+                ddc_rate_code=ddc_rate_code,
+                ddc_name=ddc_name,
+                ddc_unit=ddc_unit,
+                unit_price=round(unit_price, 2),
+                labor_hours=round(labor_hours, 2),
+                total_net=round(item_net, 2),
+                vat_rate=vat_rate,
+                vat_amount=round(item_vat, 2),
+                total_gross=round(item_gross, 2),
+                confidence_percent=confidence
+            ))
+        
+        avg_confidence = int(total_confidence / len(request.materials)) if request.materials else 0
+        
+        return BulkEstimationResponse(
+            country=request.country.upper(),
+            currency="EUR",
+            vat_rate=vat_rate,
+            total_net=round(total_net, 2),
+            total_vat=round(total_vat, 2),
+            total_gross=round(total_gross, 2),
+            total_labor_hours=round(total_labor_hours, 2),
+            items_count=len(estimated_items),
+            avg_confidence=avg_confidence,
+            items=estimated_items,
+            cost_by_category=cost_by_category,
+            generated_at=datetime.now().isoformat()
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Estimation failed: {str(e)}")

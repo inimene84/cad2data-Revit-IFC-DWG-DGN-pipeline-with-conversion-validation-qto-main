@@ -1,0 +1,320 @@
+file_name,action,tool,expected_output,estimated_time,priority
+TRN_EP_AS-4-01_V04_Asendiplaan_vertikaal.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,Medium
+TRN_PP_AR-4-02_V01_Valisvalgustid.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-5-01_V01_Korruseplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-5-02_V01_Katuse-plaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-5-03_V01_Lagede-korgused.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-6-01_V01_Loiked.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-6-02_V01_Vaated.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-6-03_V01_Vaated.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-01_V01_Soklisolm.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-02_V01_Aken-vert.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-03_V01_Aken-hor-laudisega-seinas.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-04_V01_Aken-hor-fassaadiplaadiga-seinas.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-05_V01_Klaasfassaadi-ja-terrassi-solm.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-06_V01_Parapett.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-07_V01_Parapett-varikatus-klaasfassaad.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-08_V01_Katuste-uhendus.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-09_V01_Peasissepaasu-trepp.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-10_V01_Magamistoa-terrass.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-11_V01_Valisseina-sisenurk.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-7-12_V01_Vihmaveetoru-laudise-taga.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-8-01_V01_Konstr-vert.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-8-02_V01_Konstr-hor.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-8-03_V01_Akende-spetsifikatsioon.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-8-04_V01_Klaasfassaad-KLF-01.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-8-05_V01_Klaasfassaad-KLF-02.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AR-8-06_V01_Valisuste-spetsifikatsioon.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_PP_AS-4-01_V01_Asendiplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-4-02_V01_Valisvalgustid.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-5-01_V01_Korruseplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-5-02_V01_Katuse-plaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-5-03_V01_Lagede-korgused.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-6-01_V01_Loiked.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-6-02_V01_Vaated.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-6-03_V01_Vaated.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-01_V01_Soklisolm.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-02_V01_Aken-vert.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-03_V01_Aken-hor-laudisega-seinas.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-04_V01_Aken-hor-fassaadiplaadiga-seinas.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-05_V01_Klaasfassaadi-ja-terrassi-solm.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-06_V01_Parapett.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-07_V01_Parapett-varikatus-klaasfassaad.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-08_V01_Katuste-uhendus.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-09_V01_Peasissepaasu-trepp.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-10_V01_Magamistoa-terrass.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-11_V01_Valisseina-sisenurk.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-7-12_V01_Vihmaveetoru-laudise-taga.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-8-01_V01_Konstr-vert.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-8-02_V01_Konstr-hor.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-8-03_V01_Akende-spetsifikatsioon.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-8-04_V01_Klaasfassaad-KLF-01.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-8-05_V01_Klaasfassaad-KLF-02.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AR-8-06_V01_Valisuste-spetsifikatsioon.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_PP_AS-4-01_V01_Asendiplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan (1).dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+._TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.dwg,Convert to Excel,DwgExporter.exe,Element data + quantities,2-5 minutes,High
+K0.10 SEINTE Ts╠īs╠īPARMEERIMISJOONIS.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K1.1 VUNDAMENDITALDMIKE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K1.1.1 s╠īKSIKVUNDAMENT PT600 JA PJ-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K1.1.2 s╠īKSIKVUNDAMENT PT600 JA PJ-2.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K1.1.3 s╠īKSIKVUNDAMENT PT600 JA PJ-3.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K1.2 VUNDAMENDISEINTE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K1.2.1 AVAT┬ÄITEKANDUR ATK-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.1 PO╠āHIPLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.1.1 TERASPOST TP-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.1.11 RB SILLUS S-111, 112.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.1.12 RB SILLUS S-113, 114.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.1.13 RB SILLUS S-115, 116.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.1.14 RB SILLUS S-117, 118.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.1.2 TERASPOST TP-2.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.1.3 TERASPOST TP-3.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.1.4 TERASPOST TP-4.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.1.5 TERASPOST TP-5.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.1.6 TERASPOST TP-6.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K2.2 LAEPANEELIDE LAOTIS.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.2.1 LMS-1,2.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.2.2 LMS-3,4.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.2.3 LMS-5,6.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K2.2.4 LMS-7,8.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K3.1 TERRASSIDE JA TREPPIDE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K3.1.1 V┬ÄLISTREPP VTR-1, GABARIIT.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"K3.1.1.1 V┬ÄLISTREPP VTR-1, ARMEERIMINE.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.1 VARIKATUSTE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.2 VARIKATUSTE TU╠łU╠łPLO╠āIKED.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.3.1 TERASKANDUR TK-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.3.2 TERASKANDUR TK-2.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.3.3 TERASKANDUR TK-3.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.3.4 TERASKANDUR TK-4.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.3.5 TERASKANDUR TK-5.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+K4.3.6 TERASKANDUR TK-6.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-0-01_v01_Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-0-02_v01_DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-3-01_v01_Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-4-01_V01_Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-4-02_V01_Valisvalgustid.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-5-01_V01_Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-5-02_V01_Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-5-03_V01_Lagede-korgused.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-6-01_V01_Loiked.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-6-02_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-6-03_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-01_V01_Soklisolm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-02_V01_Aken-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-03_V01_Aken-hor-laudisega-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-04_V01_Aken-hor-fassaadiplaadiga-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-05_V01_Klaasfassaadi-ja-terrassi-solm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-06_V01_Parapett.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-07_V01_Parapett-varikatus-klaasfassaad.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-08_V01_Katuste-uhendus.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-09_V01_Peasissepaasu-trepp.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-10_V01_Magamistoa-terrass.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-11_V01_Valisseina-sisenurk.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-12_V01_Vihmaveetoru-laudise-taga.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-01_V01_Konstr-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-02_V01_Konstr-hor.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-03_V01_Akende-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-04_V01_Klaasfassaad-KLF-01.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-05_V01_Klaasfassaad-KLF-02.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-06_V01_Valisuste-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_EK_koosseis.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_EK_seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K0.10 SEINTE Ts╠īs╠īPARMEERIMISJOONIS.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K1.1 VUNDAMENDITALDMIKE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K1.1.1 s╠īKSIKVUNDAMENT PT600 JA PJ-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K1.1.2 s╠īKSIKVUNDAMENT PT600 JA PJ-2.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K1.1.3 s╠īKSIKVUNDAMENT PT600 JA PJ-3.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K1.2 VUNDAMENDISEINTE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K1.2.1 AVAT┬ÄITEKANDUR ATK-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.1 PO╠āHIPLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.1.1 TERASPOST TP-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.1.11 RB SILLUS S-111, 112.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.1.12 RB SILLUS S-113, 114.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.1.13 RB SILLUS S-115, 116.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.1.14 RB SILLUS S-117, 118.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.1.2 TERASPOST TP-2.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.1.3 TERASPOST TP-3.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.1.4 TERASPOST TP-4.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.1.5 TERASPOST TP-5.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.1.6 TERASPOST TP-6.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K2.2 LAEPANEELIDE LAOTIS.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.2.1 LMS-1,2.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.2.2 LMS-3,4.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.2.3 LMS-5,6.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K2.2.4 LMS-7,8.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K3.1 TERRASSIDE JA TREPPIDE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K3.1.1 V┬ÄLISTREPP VTR-1, GABARIIT.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+"._K3.1.1.1 V┬ÄLISTREPP VTR-1, ARMEERIMINE.pdf",OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.1 VARIKATUSTE PLAAN.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.2 VARIKATUSTE TU╠łU╠łPLO╠āIKED.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.3.1 TERASKANDUR TK-1.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.3.2 TERASKANDUR TK-2.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.3.3 TERASKANDUR TK-3.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.3.4 TERASKANDUR TK-4.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.3.5 TERASKANDUR TK-5.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._K4.3.6 TERASKANDUR TK-6.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-0-01_v01_Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-0-02_v01_DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-3-01_v01_Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-4-01_V01_Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-4-02_V01_Valisvalgustid.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-5-01_V01_Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-5-02_V01_Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-5-03_V01_Lagede-korgused.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-6-01_V01_Loiked.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-6-02_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-6-03_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-01_V01_Soklisolm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-02_V01_Aken-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-03_V01_Aken-hor-laudisega-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-04_V01_Aken-hor-fassaadiplaadiga-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-05_V01_Klaasfassaadi-ja-terrassi-solm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-06_V01_Parapett.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-07_V01_Parapett-varikatus-klaasfassaad.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-08_V01_Katuste-uhendus.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-09_V01_Peasissepaasu-trepp.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-10_V01_Magamistoa-terrass.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-11_V01_Valisseina-sisenurk.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-12_V01_Vihmaveetoru-laudise-taga.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-01_V01_Konstr-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-02_V01_Konstr-hor.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-03_V01_Akende-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-04_V01_Klaasfassaad-KLF-01.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-05_V01_Klaasfassaad-KLF-02.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-06_V01_Valisuste-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_EK_koosseis.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_EK_seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-0-01_v01_Abihoone-Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-0-02_v01_Abihoone-DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-3-01_v01_Abihoone-Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-0-01_v01_Abihoone-Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-0-02_v01_Abihoone-DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-3-01_v01_Abihoone-Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-0-01_v01_Abihoone-Tiitelleht (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-0-01_v01_Abihoone-Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-0-02_v01_Abihoone-DokNimekiri (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-0-02_v01_Abihoone-DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-3-01_v01_Abihoone-Seletuskiri (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-3-01_v01_Abihoone-Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-01_V01_Abihoone-korruseplaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan (2).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan (2).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-6-01_V01_Abihoone-vaated-loige (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_EP_AS-4-01_V01_Asendiplaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_ES_AR-5-01_V01_Abihoone-korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_ES_AR-6-01_V01_Abihoone-vaated-loige.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-0-01_v01_Abihoone-Tiitelleht (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-0-01_v01_Abihoone-Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-0-02_v01_Abihoone-DokNimekiri (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-0-02_v01_Abihoone-DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-3-01_v01_Abihoone-Seletuskiri (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-3-01_v01_Abihoone-Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-01_V01_Abihoone-korruseplaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan (2).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-01_V01_Abihoone-Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan (2).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-5-02_V01_Abihoone-Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-6-01_V01_Abihoone-vaated-loige (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AR-6-02_V01_Abihoone-Vaated-loige.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AS-4-01_V01_Abihoone-Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_EP_AS-4-01_V01_Asendiplaan (1).pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_ES_AR-5-01_V01_Abihoone-korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_ES_AR-6-01_V01_Abihoone-vaated-loige.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-0-01_v01_Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-0-02_v01_DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-3-01_v01_Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-4-01_V01_Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-4-02_V01_Valisvalgustid.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-5-01_V01_Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-5-02_V01_Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-5-03_V01_Lagede-korgused.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-6-01_V01_Loiked.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-6-02_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-6-03_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-01_V01_Soklisolm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-02_V01_Aken-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-03_V01_Aken-hor-laudisega-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-04_V01_Aken-hor-fassaadiplaadiga-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-05_V01_Klaasfassaadi-ja-terrassi-solm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-06_V01_Parapett.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-07_V01_Parapett-varikatus-klaasfassaad.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-08_V01_Katuste-uhendus.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-09_V01_Peasissepaasu-trepp.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-10_V01_Magamistoa-terrass.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-11_V01_Valisseina-sisenurk.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-7-12_V01_Vihmaveetoru-laudise-taga.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-01_V01_Konstr-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-02_V01_Konstr-hor.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-03_V01_Akende-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-04_V01_Klaasfassaad-KLF-01.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-05_V01_Klaasfassaad-KLF-02.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+TRN_PP_AR-8-06_V01_Valisuste-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-0-01_v01_Tiitelleht.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-0-02_v01_DokNimekiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-3-01_v01_Seletuskiri.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-4-01_V01_Asendiplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-4-02_V01_Valisvalgustid.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-5-01_V01_Korruseplaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-5-02_V01_Katuse-plaan.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-5-03_V01_Lagede-korgused.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-6-01_V01_Loiked.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-6-02_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-6-03_V01_Vaated.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-01_V01_Soklisolm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-02_V01_Aken-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-03_V01_Aken-hor-laudisega-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-04_V01_Aken-hor-fassaadiplaadiga-seinas.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-05_V01_Klaasfassaadi-ja-terrassi-solm.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-06_V01_Parapett.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-07_V01_Parapett-varikatus-klaasfassaad.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-08_V01_Katuste-uhendus.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-09_V01_Peasissepaasu-trepp.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-10_V01_Magamistoa-terrass.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-11_V01_Valisseina-sisenurk.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-7-12_V01_Vihmaveetoru-laudise-taga.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-01_V01_Konstr-vert.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-02_V01_Konstr-hor.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-03_V01_Akende-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-04_V01_Klaasfassaad-KLF-01.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-05_V01_Klaasfassaad-KLF-02.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium
+._TRN_PP_AR-8-06_V01_Valisuste-spetsifikatsioon.pdf,OCR + Text extraction,Tesseract OCR,Text + dimensions,1-3 minutes,Medium

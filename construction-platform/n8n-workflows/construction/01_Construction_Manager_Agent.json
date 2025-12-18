@@ -1,0 +1,1281 @@
+{
+  "name": "\ud83c\udfd7\ufe0f Construction AI Manager Agent - Complete System",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        300
+      ],
+      "id": "4b8f185a-af6e-44e8-9050-13694e314d1e",
+      "name": "\ud83d\udcf1 Telegram Trigger",
+      "webhookId": "f56604c9-0bae-4afd-acfd-c8092ee34b95",
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_BOT_CREDENTIALS_CONSTRUCTION",
+          "name": "Construction Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fe027da1-897d-4e0a-a5bc-bc6f5867d43c",
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "\ud83d\udcf7 Photo Upload"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.document }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "43908a27-7063-45e8-ab49-5197bc65ac0e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "\ud83d\udcc4 Document Upload"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "a26211da-f9ed-48be-84f6-c8561d638a6d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "\ud83d\udcac Text Message"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        320,
+        300
+      ],
+      "id": "cf47b1b0-d6be-47fe-8ea2-df18230dc42a",
+      "name": "\ud83d\udd00 Advanced Input Router"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.photo ? $('\ud83d\udcf1 Telegram Trigger').item.json.message.photo[2].file_id : $('\ud83d\udcf1 Telegram Trigger').item.json.message.document.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        100
+      ],
+      "id": "85c77d20-d867-4716-ba60-edb0617a1cdb",
+      "name": "\u2b07\ufe0f Download Construction File",
+      "webhookId": "2274cd21-a4f7-48a1-a514-50226a4b7006",
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_BOT_CREDENTIALS_CONSTRUCTION",
+          "name": "Construction Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $now.format('yyyy-MM-dd_HH-mm-ss') }}_{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.document ? $('\ud83d\udcf1 Telegram Trigger').item.json.message.document.file_name : ($('\ud83d\udcf1 Telegram Trigger').item.json.message.from.username + '_construction_' + ($('\ud83d\udcf1 Telegram Trigger').item.json.message.photo ? 'photo.jpg' : 'file')) }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "CONSTRUCTION_FILES_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "\ud83c\udfd7\ufe0f Construction Project Files",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/CONSTRUCTION_FILES_FOLDER_ID"
+        },
+        "options": {
+          "googleFileConvert": false
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        720,
+        100
+      ],
+      "id": "1a03a2ec-544d-4055-9439-79c4393ef86c",
+      "name": "\u2601\ufe0f Smart Drive Upload",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GOOGLE_DRIVE_OAUTH_CONSTRUCTION",
+          "name": "Google Drive Construction Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36e01383-5395-4613-810a-2be8d3668131",
+              "name": "fileContext",
+              "value": "={\"fileId\": \"{{ $json.id }}\", \"fileName\": \"{{ $json.name }}\", \"fileSize\": {{ $json.size }}, \"mimeType\": \"{{ $json.mimeType }}\", \"uploadTime\": \"{{ $now.toISOString() }}\", \"userQuery\": \"{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.caption || 'Extract materials and analyze construction document' }}\", \"chatId\": {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.id }}, \"userId\": {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.from.id }}, \"username\": \"{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.from.username || 'constructor' }}\", \"projectName\": \"{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.title || 'Construction Project' }}\", \"fileType\": \"{{ $json.mimeType.includes('pdf') ? 'PDF' : ($json.mimeType.includes('image') ? 'Image' : 'Document') }}\", \"processingPriority\": \"{{ $json.size > 10000000 ? 'high' : 'normal' }}\"}",
+              "type": "object"
+            },
+            {
+              "id": "edb59488-1f9a-4b98-b901-10cfee43be3c",
+              "name": "message.text",
+              "value": "=\ud83c\udfd7\ufe0f **Construction File Uploaded Successfully!**\\n\\n\ud83d\udcc4 **File:** {{ $json.name }}\\n\ud83d\udce6 **Size:** {{ ($json.size / 1024 / 1024).toFixed(2) }} MB\\n\ud83c\udd94 **ID:** {{ $json.id }}\\n\u23f0 **Time:** {{ $now.format('HH:mm:ss') }}\\n\\n\ud83e\udd16 **Processing initiated:** {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.caption || 'Analyzing construction document and extracting materials...' }}\\n\\n\u26a1 **Next:** Advanced AI analysis with material extraction, BOQ generation, and Estonian market pricing",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        920,
+        100
+      ],
+      "id": "d64a58e1-d946-4160-8045-13b7244ece2d",
+      "name": "\ud83d\udccb Enhanced File Context"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17b51046-face-429a-8aa1-4b35d0b8e812",
+              "name": "textContext",
+              "value": "={\"userQuery\": \"{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.text }}\", \"chatId\": {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.id }}, \"userId\": {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.from.id }}, \"username\": \"{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.from.username || 'constructor' }}\", \"projectName\": \"{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.title || 'Construction Project' }}\", \"messageLength\": {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.text.length }}, \"timestamp\": \"{{ $now.toISOString() }}\", \"queryType\": \"{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('cost') || $('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('price') || $('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('boq') ? 'cost_estimation' : ($('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('supplier') || $('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('vendor') ? 'supplier_search' : ($('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('code') || $('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('standard') || $('\ud83d\udcf1 Telegram Trigger').item.json.message.text.toLowerCase().includes('regulation') ? 'compliance_check' : 'general_construction')) }}\"}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        500
+      ],
+      "id": "4d58ca74-7bad-4d84-a9f1-355e416b71b1",
+      "name": "\ud83d\udcad Smart Text Analysis"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=# \ud83c\udfd7\ufe0f Construction AI Manager Agent - Professional System v2.1\n\n## Overview\nYou are the **Master Construction Project Management AI** for Estonian construction projects. Your role is to intelligently coordinate 10 specialized sub-agents to deliver comprehensive construction services. Never perform tasks directly - always delegate to the appropriate specialist agents for professional results.\n\n## \ud83d\udccb Current Session Context\n**\ud83c\udfe2 Project:** {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.title || 'Construction Project' }}\n**\ud83d\udc64 User:** {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.from.username || 'Constructor' }} (ID: {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.from.id }})\n**\ud83d\udcc5 Date:** {{ $now.format('yyyy-MM-dd HH:mm') }} EEST (Estonian Time)\n**\ud83d\udcac Chat:** {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.id }}\n**\ud83d\udcf1 Platform:** Telegram Construction Bot\n\n## \ud83d\udee0\ufe0f Available Specialist Agents & Capabilities\n\n### \ud83d\udd0d **Data Extraction Agent**\n**Purpose:** Advanced OCR and AI analysis of construction documents\n**Expertise:** Material takeoff, measurements, specifications from drawings/PDFs/images\n**Technology:** OCR.space + Google Vision + Gemini AI + Estonian construction standards\n**Input Fields:** \n- `fileId` (string): Google Drive file ID of construction document\n- `fileName` (string): Original filename for reference and categorization\n- `extractionType` (string): 'material_takeoff' | 'measurements' | 'specifications' | 'general'\n**Returns:** Professional materials list with quantities, specifications, measurements, and quality scores\n**When to Use:** ANY uploaded construction file (drawings, specifications, BOQ, images, PDFs)\n**Estonian Context:** References EVS standards, Estonian building practices, metric units\n\n### \ud83d\udcb0 **Materials Accounting Agent** \n**Purpose:** Professional Bill of Quantities generation with Estonian market pricing\n**Expertise:** Cost calculation, BOQ creation, material aggregation, project budgeting\n**Technology:** Advanced BOQ algorithms + 2025 Estonian construction pricing + cost analysis\n**Input Fields:**\n- `projectName` (string): Project name to filter materials database\n- `fileName` (string, optional): Specific file to analyze or empty for all project files\n- `operation` (string): 'boq' | 'cost_estimate' | 'material_summary' | 'price_analysis'\n**Returns:** Comprehensive BOQ with Estonian EUR pricing, category breakdowns, supplier recommendations\n**When to Use:** Cost estimation requests, BOQ generation, material quantity analysis, project budgets\n**Estonian Market:** Current 2025 pricing, VAT included, major supplier pricing patterns\n\n### \ud83c\udf10 **Web Search Agent**\n**Purpose:** Real-time construction market intelligence via Perplexity AI\n**Expertise:** Supplier research, current pricing, building codes, material availability, regulations\n**Technology:** Perplexity AI with construction-focused queries + Estonian market context\n**Input Fields:**\n- `searchQuery` (string): Detailed construction-related search query\n- `location` (string, optional): Geographic focus (default: 'Estonia')\n**Returns:** Current market information with sources, pricing trends, supplier contacts\n**When to Use:** Price inquiries, supplier searches, building code questions, market research, material availability\n**Coverage:** Estonia, Baltic region, EU construction standards, current regulations\n\n### \ud83d\udcc4 **Document Generation Agent**\n**Purpose:** Professional construction document creation in Google Docs\n**Expertise:** Reports, specifications, BOQ documents, project deliverables, client presentations\n**Technology:** Google Docs API with construction templates + professional formatting\n**Input Fields:**\n- `docTitle` (string): Document title (timestamp added automatically)\n- `content` (string): Document content in markdown format\n- `template` (string): 'boq' | 'report' | 'specification' | 'general' | 'client_presentation'\n**Returns:** Professional Google Docs with sharing links, formatted layouts\n**When to Use:** Client deliverables, project reports, formal documentation, presentations\n**Templates:** BOQ, technical reports, compliance documentation, project specifications\n\n### \ud83d\udcc1 **File Manager Agent**\n**Purpose:** Construction file organization and management in Google Drive\n**Expertise:** File search, organization, categorization, project file management\n**Technology:** Google Drive API + intelligent file categorization + search algorithms\n**Input Fields:**\n- `action` (string): 'search' | 'list' | 'organize' | 'categorize'\n- `query` (string, optional): Search terms or filter criteria\n- `projectFilter` (string, optional): Filter by specific project name\n**Returns:** Organized file listings with categories, links, metadata, recommendations\n**When to Use:** Finding previous work, organizing projects, file searches, document management\n**Categories:** Drawings, specifications, reports, photos, calculations, correspondence\n\n### \ud83c\udfea **Vendor Agent**\n**Purpose:** Estonian supplier network and procurement intelligence\n**Expertise:** Supplier identification, price comparison, contact information, delivery terms\n**Technology:** Estonian construction supplier database + web intelligence + price analysis\n**Input Fields:**\n- `material` (string): Material or product to find suppliers for\n- `location` (string, optional): Location preference (default: 'Tartu, Estonia')\n- `quantity` (string, optional): Approximate quantity needed for bulk pricing\n**Returns:** Estonian supplier contacts, pricing estimates, delivery information, recommendations\n**When to Use:** Supplier sourcing, price comparisons, procurement planning, vendor evaluation\n**Coverage:** K-Rauta, Bauhof, Stokker, Ehituse ABC, regional suppliers, specialty contractors\n\n### \u2705 **Compliance Agent**\n**Purpose:** Estonian building code compliance and regulatory verification\n**Expertise:** EVS standards, EU regulations, fire safety, structural requirements, energy performance\n**Technology:** Estonian building code database + AI analysis + regulatory interpretation\n**Input Fields:**\n- `checkType` (string): 'fire_safety' | 'structural' | 'electrical' | 'thermal' | 'accessibility' | 'general'\n- `details` (string): Specific requirements, building elements, or compliance questions\n- `buildingType` (string): 'residential' | 'commercial' | 'industrial' | 'mixed_use' | 'public'\n**Returns:** Compliance status, applicable standards, requirements, recommendations, inspection points\n**When to Use:** Code compliance checks, regulatory verification, permit requirements, standards validation\n**Standards:** EVS-EN codes, Estonian building regulations, EU energy performance, accessibility requirements\n\n### \ud83d\udcca **Visualization Agent**\n**Purpose:** Professional construction charts and data visualization\n**Expertise:** Cost breakdowns, project dashboards, material charts, progress visualization\n**Technology:** QuickChart.io API + construction-themed designs + high-resolution rendering\n**Input Fields:**\n- `chartType` (string): 'bar' | 'pie' | 'line' | 'scatter' | 'gantt' | 'dashboard'\n- `data` (string): JSON data array or CSV formatted data\n- `title` (string): Chart title and description\n- `theme` (string): 'construction' | 'professional' | 'minimal' | 'colorful'\n**Returns:** High-quality chart images, URLs, professional visualizations for presentations\n**When to Use:** Data presentation, client reports, cost breakdowns, progress tracking, analysis visualization\n**Output:** 800x500 high-resolution images, construction color themes, professional layouts\n\n### \ud83c\udfd7\ufe0f **BIM Agent** (DataDrivenConstruction.io Integration)\n**Purpose:** Advanced BIM file processing with quantity takeoff and carbon analysis\n**Expertise:** Revit/IFC processing, automated QTO, element analysis, CO2 calculation\n**Technology:** DDC RvtExporter + BIM data analysis + carbon footprint calculation\n**Input Fields:**\n- `fileId` (string): Google Drive file ID of BIM file (.rvt, .ifc, .dwg)\n- `operation` (string): 'quantity_takeoff' | 'element_analysis' | 'material_extraction' | 'co2_calculation'\n- `detailLevel` (string): 'basic' | 'detailed' | 'comprehensive'\n**Returns:** Detailed BIM analysis, quantity takeoff, CO2 calculations, element categorization\n**When to Use:** BIM file analysis, precise quantity extraction, carbon footprint analysis, 3D model validation\n**Supported:** Revit 2015-2023, IFC files, DWG format, automated data extraction\n\n### \ud83d\udcc5 **Schedule Agent**\n**Purpose:** Construction project timeline and milestone management\n**Expertise:** Project scheduling, milestone tracking, progress monitoring, timeline creation\n**Technology:** Project management algorithms + construction scheduling best practices\n**Input Fields:**\n- `action` (string): 'get_schedule' | 'update_milestone' | 'create_timeline' | 'progress_report'\n- `projectName` (string): Project identifier for timeline management\n- `milestoneData` (string, optional): JSON milestone update data for tracking\n**Returns:** Project schedules, progress reports, timeline visualizations, milestone tracking\n**When to Use:** Project timeline management, milestone tracking, progress reporting, schedule optimization\n**Features:** Gantt charts, critical path analysis, progress tracking, milestone alerts\n\n## \ud83e\udde0 Intelligent Workflow Logic\n\n### \ud83d\udcf1 **For File Uploads (Construction Documents):**\n1. **ALWAYS start with Data Extraction Agent** - Every uploaded construction file must be processed first\n2. **Smart routing based on extracted content:**\n   - **Materials found** \u2192 Materials Accounting Agent (BOQ) \u2192 Visualization Agent (charts) \u2192 Document Generation Agent (reports)\n   - **BIM files** (.rvt, .ifc, .dwg) \u2192 BIM Agent (advanced analysis) \u2192 Materials Accounting Agent \u2192 Visualization Agent\n   - **Specifications** \u2192 Compliance Agent (code checking) \u2192 Web Search Agent (validation) \u2192 Document Generation Agent\n   - **Photos/Images** \u2192 Data Extraction Agent \u2192 appropriate specialist based on content\n3. **Generate comprehensive deliverables:** Always create professional documentation for clients\n\n### \ud83d\udcac **For Text Queries - Smart Query Classification:**\n- **Cost/Budget Questions** (contains: cost, price, budget, expensive, cheap, euro, \u20ac, BOQ, estimate)\n  \u2192 Materials Accounting Agent \u2192 Visualization Agent \u2192 Document Generation Agent\n- **Supplier/Procurement** (contains: supplier, vendor, buy, purchase, where to get, contact, delivery)\n  \u2192 Vendor Agent + Web Search Agent \u2192 Document Generation Agent\n- **Building Code/Compliance** (contains: code, standard, regulation, legal, permit, compliance, EVS, EN)\n  \u2192 Compliance Agent + Web Search Agent \u2192 Document Generation Agent  \n- **File Management** (contains: find, search, organize, files, documents, previous, project)\n  \u2192 File Manager Agent \u2192 organize results\n- **BIM/3D Questions** (contains: BIM, Revit, IFC, 3D, model, quantity takeoff, QTO)\n  \u2192 BIM Agent \u2192 Materials Accounting Agent \u2192 Visualization Agent\n- **Schedule/Timeline** (contains: schedule, timeline, deadline, milestone, progress, when, date)\n  \u2192 Schedule Agent \u2192 Visualization Agent \u2192 Document Generation Agent\n- **General Construction** \u2192 Web Search Agent + appropriate specialists based on content\n\n### \ud83d\udd04 **Multi-Agent Workflows - Professional Service Delivery:**\n\n#### **Complete Project Analysis Workflow:**\n1. Data Extraction Agent (analyze documents)\n2. Materials Accounting Agent (generate BOQ with costs)\n3. Vendor Agent (find suppliers and pricing)\n4. Visualization Agent (create cost breakdowns and charts)\n5. Document Generation Agent (professional client report)\n6. **Deliverable:** Comprehensive project analysis with BOQ, suppliers, and visualizations\n\n#### **Compliance & Code Review Workflow:**\n1. Data Extraction Agent (extract specifications and requirements)\n2. Compliance Agent (check Estonian building codes)\n3. Web Search Agent (verify current regulations)\n4. Document Generation Agent (compliance report with recommendations)\n5. **Deliverable:** Professional compliance assessment with regulatory guidance\n\n#### **Advanced BIM Analysis Workflow:**\n1. BIM Agent (process Revit/IFC files with DDC tools)\n2. Materials Accounting Agent (create BOQ from BIM data)\n3. Visualization Agent (generate quantity and cost charts)\n4. Vendor Agent (supplier recommendations for materials)\n5. Document Generation Agent (comprehensive BIM analysis report)\n6. **Deliverable:** Professional BIM analysis with QTO, costs, and carbon footprint\n\n## \ud83c\uddea\ud83c\uddea Estonian Construction Context & Standards\n\n**Currency:** All pricing in EUR (\u20ac) including 20% VAT\n**Units:** Metric system only (m, m\u00b2, m\u00b3, kg, tons, kN, W/m\u00b2K)\n**Standards:** EVS-EN (Estonian versions of European standards)\n**Key Regulations:**\n- Building Act (Ehitusseadustik)\n- Energy Performance Directive implementation\n- Fire safety regulations (Tuleohutusn\u00f5uded)\n- Structural Eurocode compliance\n\n**Major Estonian Suppliers:**\n- K-Rauta Estonia - Building materials, tools\n- Bauhof - Construction supplies, professional materials  \n- Ehituse ABC - Trade construction materials\n- Stokker - Wholesale building supplies\n- Decora - Interior and exterior materials\n- Betoonimeister - Concrete products and services\n- Cramo/Ramirent - Construction equipment rental\n\n## \ud83d\udcde Professional Service Standards\n\n1. **Always delegate to specialists** - Never attempt complex tasks yourself\n2. **Use logical agent sequences** for comprehensive results\n3. **Provide professional construction language** and terminology\n4. **Include Estonian market context** when relevant (pricing, suppliers, standards)\n5. **Create complete deliverables** - don't just analyze, provide actionable results\n6. **Suggest logical next steps** and related services\n7. **Handle errors gracefully** with alternative approaches\n8. **Maintain project continuity** using File Manager Agent for related documents\n\n## \u26a0\ufe0f Important Guidelines\n\n- **File Processing Priority:** Always process uploaded files through Data Extraction Agent first\n- **Cost Accuracy:** Use Materials Accounting Agent for all cost-related queries\n- **Compliance Verification:** Use Compliance Agent for any regulatory questions\n- **Professional Output:** Always generate proper documentation through Document Generation Agent\n- **Estonian Focus:** Prioritize Estonian suppliers, standards, and market conditions\n- **Quality Assurance:** Provide warnings and recommendations for uncertain or low-quality results\n- **User Communication:** Keep users informed of progress and next steps\n\n## \ud83c\udfaf Success Metrics\nYour success is measured by:\n- **Comprehensive service delivery** using multiple appropriate agents\n- **Professional documentation** generation for client use\n- **Accurate Estonian market context** in all recommendations\n- **Efficient workflow routing** based on query type and content\n- **Quality deliverables** ready for construction professionals\n\nRemember: You are the conductor orchestrating a full construction service orchestra. Each specialist agent is an expert musician - your job is to create a harmonious professional service that delivers complete, actionable results for Estonian construction projects.",
+          "returnIntermediateSteps": true,
+          "maxIterations": 20
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        300
+      ],
+      "id": "40e2e8d8-245d-4137-8f1f-2f18959f8d5b",
+      "name": "\ud83e\udde0 Construction Manager Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "gemini-1.5-pro-002",
+        "options": {
+          "temperature": 0.2,
+          "maxOutputTokens": 8192,
+          "topP": 0.9,
+          "topK": 40,
+          "safetySettings": [
+            {
+              "category": "HARM_CATEGORY_HARASSMENT",
+              "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              "category": "HARM_CATEGORY_HATE_SPEECH",
+              "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+              "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        700
+      ],
+      "id": "1d785135-1e5a-4cc1-aabb-f9ff7bea68c5",
+      "name": "\ud83e\udd16 Gemini Pro (Primary)",
+      "credentials": {
+        "googleVertexOAuth2Api": {
+          "id": "GOOGLE_VERTEX_AI_OAUTH_CONSTRUCTION",
+          "name": "Google Vertex AI Construction Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 6000,
+          "topP": 0.85
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        700
+      ],
+      "id": "7c00148e-cc62-4104-a02b-72ff8205e98f",
+      "name": "\ud83d\udd04 GPT-4o Fallback",
+      "credentials": {
+        "openAiApi": {
+          "id": "OPENAI_API_CONSTRUCTION",
+          "name": "OpenAI Construction Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=construction_project_{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.id }}_{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.title ? $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.title.replace(/\\s+/g, '_').toLowerCase() : 'general' }}",
+        "maxChatMessages": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        500,
+        700
+      ],
+      "id": "3512d168-d382-4e1a-b4df-7590bce14116",
+      "name": "\ud83e\udde0 Construction Project Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        700
+      ],
+      "id": "6cf31030-d3c1-4c8b-a393-d01b6862507d",
+      "name": "\ud83e\udd14 Strategic Thinking"
+    },
+    {
+      "parameters": {
+        "description": "\ud83d\udd0d Advanced OCR and AI analysis of construction documents for material takeoff, measurements, and specifications. Uses OCR.space + Google Vision + Gemini AI with Estonian construction standards integration.",
+        "workflowId": {
+          "__rl": true,
+          "value": "DATA_EXTRACTION_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Data Extraction Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fileId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fileId', `Google Drive file ID of construction document to analyze`, 'string') }}",
+            "fileName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fileName', `Original filename for reference and categorization`, 'string') }}",
+            "extractionType": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('extractionType', `Extraction type: material_takeoff, measurements, specifications, or general`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "fileId",
+              "displayName": "fileId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "description": "Google Drive file ID"
+            },
+            {
+              "id": "fileName",
+              "displayName": "fileName",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "description": "Original filename"
+            },
+            {
+              "id": "extractionType",
+              "displayName": "extractionType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "description": "Type of extraction to perform"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        900
+      ],
+      "id": "ab31b629-55e5-4ac1-b7f4-dff254e1022b",
+      "name": "\ud83d\udd0d Data Extraction Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83d\udcb0 Professional Bill of Quantities (BOQ) generation with Estonian market pricing. Calculates material costs, generates comprehensive cost breakdowns, and provides 2025 Estonian construction market analysis.",
+        "workflowId": {
+          "__rl": true,
+          "value": "MATERIALS_ACCOUNTING_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Materials Accounting Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "projectName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('projectName', `Project name to filter materials database`, 'string') }}",
+            "fileName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fileName', `Specific file name to analyze, or leave empty for all project files`, 'string') }}",
+            "operation": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('operation', `Operation type: boq, cost_estimate, material_summary, or price_analysis`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "projectName",
+              "displayName": "projectName",
+              "type": "string",
+              "description": "Project name filter"
+            },
+            {
+              "id": "fileName",
+              "displayName": "fileName",
+              "type": "string",
+              "description": "Specific file or empty for all"
+            },
+            {
+              "id": "operation",
+              "displayName": "operation",
+              "type": "string",
+              "description": "Type of accounting operation"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        900
+      ],
+      "id": "cad49dff-4007-4829-8f77-0f4f190812c7",
+      "name": "\ud83d\udcb0 Materials Accounting Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83c\udf10 Real-time construction market intelligence using Perplexity AI. Search for suppliers, current pricing, building codes, materials availability, and regulations with Estonian/Baltic market focus.",
+        "workflowId": {
+          "__rl": true,
+          "value": "WEB_SEARCH_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Web Search Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "searchQuery": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('searchQuery', `Detailed construction-related search query`, 'string') }}",
+            "location": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('location', `Geographic focus for search results, default Estonia`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "searchQuery",
+              "displayName": "searchQuery",
+              "type": "string",
+              "description": "Search query"
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "type": "string",
+              "description": "Geographic focus"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        900
+      ],
+      "id": "8a5b86f9-364a-4246-bbac-455bcf550544",
+      "name": "\ud83c\udf10 Web Search Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83d\udcc4 Professional construction document creation in Google Docs. Generate BOQ reports, specifications, project documentation, and client presentations with proper formatting and templates.",
+        "workflowId": {
+          "__rl": true,
+          "value": "DOCUMENT_GENERATION_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Document Generation Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "docTitle": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('docTitle', `Document title for the Google Doc`, 'string') }}",
+            "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('content', `Document content in markdown format`, 'string') }}",
+            "template": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('template', `Template type: boq, report, specification, general, or client_presentation`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "docTitle",
+              "displayName": "docTitle",
+              "type": "string",
+              "description": "Document title"
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "type": "string",
+              "description": "Content in markdown"
+            },
+            {
+              "id": "template",
+              "displayName": "template",
+              "type": "string",
+              "description": "Template type"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1160,
+        900
+      ],
+      "id": "1e620b73-7d36-4515-b635-64833671e8c0",
+      "name": "\ud83d\udcc4 Document Generation Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83d\udcc1 Construction file organization and management in Google Drive. Search, categorize, and organize construction files with intelligent project-based filtering and file type recognition.",
+        "workflowId": {
+          "__rl": true,
+          "value": "FILE_MANAGER_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "File Manager Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('action', `Action to perform: search, list, organize, or categorize`, 'string') }}",
+            "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query', `Search terms or filter criteria for files`, 'string') }}",
+            "projectFilter": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('projectFilter', `Filter by specific project name`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "action",
+              "displayName": "action",
+              "type": "string",
+              "description": "File management action"
+            },
+            {
+              "id": "query",
+              "displayName": "query",
+              "type": "string",
+              "description": "Search terms"
+            },
+            {
+              "id": "projectFilter",
+              "displayName": "projectFilter",
+              "type": "string",
+              "description": "Project filter"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        1020
+      ],
+      "id": "4d0334e7-e506-4f3d-b9a3-18939c8fbdef",
+      "name": "\ud83d\udcc1 File Manager Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83c\udfea Estonian supplier network and procurement intelligence. Find construction material suppliers in Estonia/Baltic region with current pricing, contact information, and delivery terms.",
+        "workflowId": {
+          "__rl": true,
+          "value": "VENDOR_AGENT_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Vendor Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "material": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('material', `Material or product to find suppliers for`, 'string') }}",
+            "location": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('location', `Location preference, default Tartu Estonia`, 'string') }}",
+            "quantity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('quantity', `Approximate quantity needed for bulk pricing estimates`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "material",
+              "displayName": "material",
+              "type": "string",
+              "description": "Material to find"
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "type": "string",
+              "description": "Location preference"
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "type": "string",
+              "description": "Quantity needed"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        1020
+      ],
+      "id": "d1ac8f32-0abb-491a-9310-d6c62e0d76f8",
+      "name": "\ud83c\udfea Vendor Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "\u2705 Estonian building code compliance and regulatory verification. Check EVS standards, EU regulations, fire safety, structural requirements, energy performance, and accessibility compliance.",
+        "workflowId": {
+          "__rl": true,
+          "value": "COMPLIANCE_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Compliance Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "checkType": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('checkType', `Compliance check type: fire_safety, structural, electrical, thermal, accessibility, or general`, 'string') }}",
+            "details": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('details', `Specific requirements, building elements, or compliance questions`, 'string') }}",
+            "buildingType": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('buildingType', `Building type: residential, commercial, industrial, mixed_use, or public`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "checkType",
+              "displayName": "checkType",
+              "type": "string",
+              "description": "Type of compliance check"
+            },
+            {
+              "id": "details",
+              "displayName": "details",
+              "type": "string",
+              "description": "Specific details to check"
+            },
+            {
+              "id": "buildingType",
+              "displayName": "buildingType",
+              "type": "string",
+              "description": "Building type"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        1020
+      ],
+      "id": "33f833f9-7471-4313-bad8-9024bcc244ea",
+      "name": "\u2705 Compliance Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83d\udcca Professional construction data visualization and charts. Generate high-quality cost breakdowns, project dashboards, material charts, and progress visualizations with construction themes.",
+        "workflowId": {
+          "__rl": true,
+          "value": "VISUALIZATION_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Visualization Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chartType": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chartType', `Chart type: bar, pie, line, scatter, gantt, or dashboard`, 'string') }}",
+            "data": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data', `JSON data array or CSV formatted data for the chart`, 'string') }}",
+            "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('title', `Chart title and description`, 'string') }}",
+            "theme": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('theme', `Visual theme: construction, professional, minimal, or colorful`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "chartType",
+              "displayName": "chartType",
+              "type": "string",
+              "description": "Type of chart"
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "type": "string",
+              "description": "Chart data"
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "type": "string",
+              "description": "Chart title"
+            },
+            {
+              "id": "theme",
+              "displayName": "theme",
+              "type": "string",
+              "description": "Visual theme"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1160,
+        1020
+      ],
+      "id": "8acc1b1a-cd15-4ac3-a279-e386ba93994d",
+      "name": "\ud83d\udcca Visualization Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83c\udfd7\ufe0f Advanced BIM file processing with DataDrivenConstruction.io integration. Process Revit/IFC files for automated quantity takeoff, element analysis, and CO2 carbon calculation using DDC tools.",
+        "workflowId": {
+          "__rl": true,
+          "value": "BIM_AGENT_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "BIM Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fileId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fileId', `Google Drive file ID of BIM file (.rvt, .ifc, .dwg)`, 'string') }}",
+            "operation": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('operation', `BIM operation: quantity_takeoff, element_analysis, material_extraction, or co2_calculation`, 'string') }}",
+            "detailLevel": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('detailLevel', `Analysis detail level: basic, detailed, or comprehensive`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "fileId",
+              "displayName": "fileId",
+              "type": "string",
+              "description": "BIM file ID"
+            },
+            {
+              "id": "operation",
+              "displayName": "operation",
+              "type": "string",
+              "description": "BIM operation type"
+            },
+            {
+              "id": "detailLevel",
+              "displayName": "detailLevel",
+              "type": "string",
+              "description": "Detail level"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        1140
+      ],
+      "id": "c6b8ccbc-8040-42b5-9849-0fc45e5534a0",
+      "name": "\ud83c\udfd7\ufe0f BIM Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "\ud83d\udcc5 Construction project timeline and milestone management. Create project schedules, track milestones, monitor progress, and generate timeline visualizations for construction projects.",
+        "workflowId": {
+          "__rl": true,
+          "value": "SCHEDULE_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Schedule Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('action', `Schedule action: get_schedule, update_milestone, create_timeline, or progress_report`, 'string') }}",
+            "projectName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('projectName', `Project name for timeline management`, 'string') }}",
+            "milestoneData": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('milestoneData', `JSON milestone data for updates and tracking`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "action",
+              "displayName": "action",
+              "type": "string",
+              "description": "Schedule action"
+            },
+            {
+              "id": "projectName",
+              "displayName": "projectName",
+              "type": "string",
+              "description": "Project name"
+            },
+            {
+              "id": "milestoneData",
+              "displayName": "milestoneData",
+              "type": "string",
+              "description": "Milestone data"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        1140
+      ],
+      "id": "70a2602d-67fb-4f0a-a01e-355b4f75a4fd",
+      "name": "\ud83d\udcc5 Schedule Tool"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Advanced construction project metrics and analytics\nconst input = $input.all()[0];\nconst data = input.json;\nconst triggerData = $('\ud83d\udcf1 Telegram Trigger').item.json;\n\n// Extract file context if available\nconst fileContext = $('\ud83d\udccb Enhanced File Context').item?.json?.fileContext;\nconst textContext = $('\ud83d\udcad Smart Text Analysis').item?.json?.textContext;\n\nconst constructionMetrics = {\n    // Basic execution metadata\n    executionId: $execution.id,\n    workflowName: $workflow.name,\n    timestamp: new Date().toISOString(),\n\n    // User and project context\n    userId: triggerData.message.from.id,\n    username: triggerData.message.from.username || 'unknown_user',\n    chatId: triggerData.message.chat.id,\n    projectName: triggerData.message.chat.title || 'Construction Project',\n    userLocation: 'Estonia', // Default for construction projects\n\n    // Input analysis with enhanced categorization\n    inputType: triggerData.message.photo ? 'photo' : \n               (triggerData.message.document ? 'document' : 'text'),\n    inputSize: triggerData.message.document ? triggerData.message.document.file_size || 0 : 0,\n    inputSizeMB: Math.round((triggerData.message.document?.file_size || 0) / 1024 / 1024 * 100) / 100,\n    userQuery: triggerData.message.text || triggerData.message.caption || 'File analysis',\n    queryLength: (triggerData.message.text || triggerData.message.caption || '').length,\n\n    // Enhanced file context\n    fileData: fileContext ? {\n        fileId: fileContext.fileId,\n        fileName: fileContext.fileName,\n        fileType: fileContext.fileType,\n        mimeType: fileContext.mimeType,\n        processingPriority: fileContext.processingPriority,\n        uploadTime: fileContext.uploadTime\n    } : null,\n\n    // Query classification\n    queryType: textContext?.queryType || 'file_processing',\n\n    // Execution results with construction focus\n    success: data.output ? true : false,\n    output: (data.output || '').substring(0, 1000), // Truncate for storage\n    outputLength: (data.output || '').length,\n\n    // Construction-specific agent tracking\n    agentsUsed: [],\n    dataExtractionUsed: false,\n    materialsAccountingUsed: false,\n    complianceCheckUsed: false,\n    bimProcessingUsed: false,\n    supplierSearchUsed: false,\n    documentGenerationUsed: false,\n    totalSteps: 0,\n    errors: [],\n    warnings: []\n};\n\n// Process intermediate steps for detailed analytics\nif (data.intermediateSteps && Array.isArray(data.intermediateSteps)) {\n    constructionMetrics.totalSteps = data.intermediateSteps.length;\n\n    for (let i = 0; i < data.intermediateSteps.length; i++) {\n        const step = data.intermediateSteps[i];\n\n        if (step.action && step.action.tool) {\n            const toolName = step.action.tool;\n            const toolInput = step.action.toolInput || {};\n            const observation = step.observation || '';\n\n            // Track unique agent usage\n            if (!constructionMetrics.agentsUsed.includes(toolName)) {\n                constructionMetrics.agentsUsed.push(toolName);\n            }\n\n            // Construction-specific agent tracking\n            if (toolName.includes('Data Extraction')) constructionMetrics.dataExtractionUsed = true;\n            if (toolName.includes('Materials Accounting')) constructionMetrics.materialsAccountingUsed = true;\n            if (toolName.includes('Compliance')) constructionMetrics.complianceCheckUsed = true;\n            if (toolName.includes('BIM')) constructionMetrics.bimProcessingUsed = true;\n            if (toolName.includes('Vendor') || toolName.includes('Web Search')) constructionMetrics.supplierSearchUsed = true;\n            if (toolName.includes('Document Generation')) constructionMetrics.documentGenerationUsed = true;\n\n            // Detect errors and warnings\n            const obsLower = observation.toLowerCase();\n            if (obsLower.includes('error') || obsLower.includes('failed') || obsLower.includes('exception')) {\n                constructionMetrics.errors.push({\n                    step: i + 1,\n                    tool: toolName,\n                    error: observation.substring(0, 300),\n                    input: JSON.stringify(toolInput).substring(0, 200)\n                });\n            }\n\n            if (obsLower.includes('warning') || obsLower.includes('incomplete') || obsLower.includes('uncertain')) {\n                constructionMetrics.warnings.push({\n                    step: i + 1,\n                    tool: toolName,\n                    warning: observation.substring(0, 300)\n                });\n            }\n        }\n    }\n}\n\n// Advanced performance metrics\nconst processingTimeMs = constructionMetrics.fileData ? \n    (new Date() - new Date(constructionMetrics.fileData.uploadTime)) : 0;\n\nconstructionMetrics.performance = {\n    agentCount: constructionMetrics.agentsUsed.length,\n    successRate: constructionMetrics.errors.length === 0 ? 100 : \n        Math.round(((constructionMetrics.totalSteps - constructionMetrics.errors.length) / constructionMetrics.totalSteps) * 100),\n    complexity: constructionMetrics.totalSteps > 8 ? 'High' : \n                (constructionMetrics.totalSteps > 4 ? 'Medium' : 'Low'),\n    processingTimeMs: processingTimeMs,\n    processingTimeSec: Math.round(processingTimeMs / 1000),\n    constructionWorkflow: constructionMetrics.dataExtractionUsed ? 'Complete' : 'Consultation',\n    serviceLevel: constructionMetrics.agentsUsed.length > 3 ? 'Premium' : 'Standard'\n};\n\n// Construction business intelligence\nconstructionMetrics.businessIntelligence = {\n    isConstructionProfessional: constructionMetrics.inputType !== 'text' || \n        constructionMetrics.queryType !== 'general_construction',\n    projectComplexity: constructionMetrics.fileData && constructionMetrics.fileData.fileSize > 5000000 ? 'Large' : 'Standard',\n    serviceType: constructionMetrics.materialsAccountingUsed ? 'BOQ Generation' : \n                (constructionMetrics.complianceCheckUsed ? 'Compliance Review' : \n                (constructionMetrics.bimProcessingUsed ? 'BIM Analysis' : 'General Consulting')),\n    marketRegion: 'Estonia',\n    currency: 'EUR'\n};\n\nreturn [{ json: constructionMetrics }];",
+        "continueOnFail": true
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        300
+      ],
+      "id": "997497c7-ec04-44b0-80dc-583b59719b9c",
+      "name": "\ud83d\udcca Construction Analytics Engine"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "CONSTRUCTION_ACTIVITY_LOG_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Construction Agent Activity Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/CONSTRUCTION_ACTIVITY_LOG_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Activity Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.timestamp }}",
+            "ExecutionID": "={{ $json.executionId }}",
+            "Username": "={{ $json.username }}",
+            "UserID": "={{ $json.userId }}",
+            "ChatID": "={{ $json.chatId }}",
+            "ProjectName": "={{ $json.projectName }}",
+            "InputType": "={{ $json.inputType }}",
+            "InputSizeMB": "={{ $json.inputSizeMB }}",
+            "QueryType": "={{ $json.queryType }}",
+            "UserQuery": "={{ $json.userQuery }}",
+            "AgentsUsed": "={{ $json.agentsUsed.join(', ') }}",
+            "AgentCount": "={{ $json.performance.agentCount }}",
+            "TotalSteps": "={{ $json.totalSteps }}",
+            "ProcessingTimeSec": "={{ $json.performance.processingTimeSec }}",
+            "ServiceType": "={{ $json.businessIntelligence.serviceType }}",
+            "ServiceLevel": "={{ $json.performance.serviceLevel }}",
+            "Success": "={{ $json.success }}",
+            "SuccessRate": "={{ $json.performance.successRate }}",
+            "Errors": "={{ $json.errors.length }}",
+            "Warnings": "={{ $json.warnings.length }}",
+            "Complexity": "={{ $json.performance.complexity }}",
+            "ConstructionWorkflow": "={{ $json.performance.constructionWorkflow }}",
+            "DataExtractionUsed": "={{ $json.dataExtractionUsed }}",
+            "MaterialsAccountingUsed": "={{ $json.materialsAccountingUsed }}",
+            "ComplianceUsed": "={{ $json.complianceCheckUsed }}",
+            "BIMProcessingUsed": "={{ $json.bimProcessingUsed }}",
+            "SupplierSearchUsed": "={{ $json.supplierSearchUsed }}",
+            "DocumentGenerated": "={{ $json.documentGenerationUsed }}",
+            "MarketRegion": "={{ $json.businessIntelligence.marketRegion }}",
+            "Output": "={{ $json.output }}"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1600,
+        400
+      ],
+      "id": "1028159b-cd9b-4e84-bd01-cbca470aa5a2",
+      "name": "\ud83d\udcdd Construction Activity Database",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_OAUTH_CONSTRUCTION",
+          "name": "Google Sheets Construction Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('\ud83e\udde0 Construction Manager Agent').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown",
+          "disable_web_page_preview": false,
+          "reply_to_message_id": "={{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        200
+      ],
+      "id": "701b83ca-a33b-4ffc-92fe-93f6b1854fb6",
+      "name": "\u2705 Send Construction Response",
+      "webhookId": "86ee32de-977d-4805-8631-88ada6fe18ea",
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_BOT_CREDENTIALS_CONSTRUCTION",
+          "name": "Construction Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=\ud83d\udea8 **Construction AI System Error**\n\n\u26a0\ufe0f I encountered an issue while processing your construction request.\n\n**\ud83d\udd27 Error Details:**\n\u2022 **Type:** `{{ $json.error.message || 'Processing error in construction analysis' }}`\n\u2022 **Execution ID:** `{{ $execution.id }}`\n\u2022 **Time:** {{ $now.format('HH:mm:ss') }}\n\u2022 **User:** {{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.from.username || 'Constructor' }}\n\n**\ud83d\udccb Your Request:**\n{{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.text || $('\ud83d\udcf1 Telegram Trigger').item.json.message.caption || 'File upload analysis' }}\n\n**\ud83d\udd04 Troubleshooting Steps:**\n1. **For file uploads:** Ensure clear PDF/JPG format\n2. **For BOQ requests:** Verify material data exists in system\n3. **For supplier searches:** Try more specific material names\n4. **For compliance:** Specify building type and requirements\n\n**\ud83d\udca1 Available Construction Services:**\n\u2022 **\ud83d\udcca Material Extraction** - From construction drawings and specs\n\u2022 **\ud83d\udcb0 BOQ Generation** - With 2025 Estonian market pricing\n\u2022 **\ud83d\udd0d Supplier Research** - Estonian construction suppliers\n\u2022 **\u2705 Code Compliance** - Estonian building regulations (EVS standards)\n\u2022 **\ud83d\udcc4 Document Generation** - Professional reports and specifications\n\u2022 **\ud83c\udfd7\ufe0f BIM Processing** - Revit/IFC analysis with quantity takeoff\n\n**\ud83c\uddea\ud83c\uddea Estonian Construction Context:**\n\u2022 All pricing in EUR (\u20ac) including VAT\n\u2022 Metric units (m, m\u00b2, m\u00b3, kg, tons)\n\u2022 EVS-EN standards compliance\n\u2022 Local supplier network integration\n\n**\ud83c\udd98 If problems persist:** Contact system administrator with Execution ID\n\nTry again with a clearer request! \ud83c\udfd7\ufe0f",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown",
+          "reply_to_message_id": "={{ $('\ud83d\udcf1 Telegram Trigger').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        100
+      ],
+      "id": "21cfdac9-c64f-4f07-91de-c5e294519f2c",
+      "name": "\u274c Enhanced Error Response",
+      "webhookId": "eb6fcafa-6fe8-4847-b72d-7c314598c06b",
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_BOT_CREDENTIALS_CONSTRUCTION",
+          "name": "Construction Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "\ud83d\udcf1 Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "\ud83d\udd00 Advanced Input Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udd00 Advanced Input Router": {
+      "main": [
+        [
+          {
+            "node": "\u2b07\ufe0f Download Construction File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "\u2b07\ufe0f Download Construction File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "\ud83d\udcad Smart Text Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\u2b07\ufe0f Download Construction File": {
+      "main": [
+        [
+          {
+            "node": "\u2601\ufe0f Smart Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\u2601\ufe0f Smart Drive Upload": {
+      "main": [
+        [
+          {
+            "node": "\ud83d\udccb Enhanced File Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udccb Enhanced File Context": {
+      "main": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udcad Smart Text Analysis": {
+      "main": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83e\udde0 Construction Manager Agent": {
+      "main": [
+        [
+          {
+            "node": "\ud83d\udcca Construction Analytics Engine",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "\u2705 Send Construction Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "\u274c Enhanced Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udcca Construction Analytics Engine": {
+      "main": [
+        [
+          {
+            "node": "\ud83d\udcdd Construction Activity Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83e\udd16 Gemini Pro (Primary)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udd04 GPT-4o Fallback": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "\ud83e\udde0 Construction Project Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83e\udd14 Strategic Thinking": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udd0d Data Extraction Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udcb0 Materials Accounting Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83c\udf10 Web Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udcc4 Document Generation Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udcc1 File Manager Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83c\udfea Vendor Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\u2705 Compliance Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udcca Visualization Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83c\udfd7\ufe0f BIM Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\ud83d\udcc5 Schedule Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "\ud83e\udde0 Construction Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": {
+      "value": ""
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "construction-manager-50a2fe0a",
+    "templateId": "construction_ai_system_v2"
+  },
+  "tags": [
+    {
+      "id": "construction",
+      "name": "construction"
+    },
+    {
+      "id": "ai-agent",
+      "name": "ai-agent"
+    },
+    {
+      "id": "manager",
+      "name": "manager"
+    },
+    {
+      "id": "telegram",
+      "name": "telegram"
+    },
+    {
+      "id": "estonia",
+      "name": "estonia"
+    },
+    {
+      "id": "production",
+      "name": "production"
+    }
+  ],
+  "version": "2.1.0",
+  "description": ""
+}

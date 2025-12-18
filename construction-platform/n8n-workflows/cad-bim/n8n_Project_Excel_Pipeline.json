@@ -1,0 +1,172 @@
+{
+  "name": "Project Excel Pipeline - Data Driven Construction",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "id": "start-workflow",
+      "name": "Start Project Processing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "project-path",
+              "name": "project_path",
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\Project",
+              "type": "string"
+            },
+            {
+              "id": "output-path",
+              "name": "output_path", 
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\Project\\Excel_Output",
+              "type": "string"
+            },
+            {
+              "id": "dwg-converter",
+              "name": "dwg_converter",
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\DDC_Converter_DWG\\datadrivenlibs\\DwgExporter.exe",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [600, 300],
+      "id": "setup-paths",
+      "name": "Setup Project Paths"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Scan project folder for all DWG and PDF files\nconst projectPath = $node['Setup Project Paths'].json.project_path;\nconst fs = require('fs');\nconst path = require('path');\n\nfunction findFiles(dir, extensions) {\n  let files = [];\n  \n  function scanDirectory(currentDir) {\n    try {\n      const items = fs.readdirSync(currentDir);\n      \n      for (const item of items) {\n        const fullPath = path.join(currentDir, item);\n        const stat = fs.statSync(fullPath);\n        \n        if (stat.isDirectory()) {\n          scanDirectory(fullPath);\n        } else if (stat.isFile()) {\n          const ext = path.extname(item).toLowerCase();\n          if (extensions.includes(ext)) {\n            files.push({\n              name: item,\n              path: fullPath,\n              size: stat.size,\n              modified: stat.mtime,\n              folder: path.basename(path.dirname(fullPath))\n            });\n          }\n        }\n      }\n    } catch (error) {\n      console.log(`Error scanning ${currentDir}: ${error.message}`);\n    }\n  }\n  \n  scanDirectory(dir);\n  return files;\n}\n\n// Find DWG and PDF files\nconst dwgFiles = findFiles(projectPath, ['.dwg']);\nconst pdfFiles = findFiles(projectPath, ['.pdf']);\n\nconsole.log(`Found ${dwgFiles.length} DWG files and ${pdfFiles.length} PDF files`);\n\n// Create file inventory\nconst fileInventory = [];\n\n// Add DWG files\nfor (const file of dwgFiles) {\n  fileInventory.push({\n    file_name: file.name,\n    file_path: file.path,\n    file_type: 'DWG',\n    folder: file.folder,\n    size_mb: Math.round(file.size / (1024 * 1024) * 100) / 100,\n    modified_date: file.modified.toISOString().split('T')[0],\n    status: 'Ready for conversion',\n    priority: file.folder.includes('Archive') ? 'High' : 'Medium'\n  });\n}\n\n// Add PDF files\nfor (const file of pdfFiles) {\n  fileInventory.push({\n    file_name: file.name,\n    file_path: file.path,\n    file_type: 'PDF',\n    folder: file.folder,\n    size_mb: Math.round(file.size / (1024 * 1024) * 100) / 100,\n    modified_date: file.modified.toISOString().split('T')[0],\n    status: 'Ready for OCR',\n    priority: 'Medium'\n  });\n}\n\nreturn [{\n  json: {\n    total_files: fileInventory.length,\n    dwg_files: dwgFiles.length,\n    pdf_files: pdfFiles.length,\n    file_inventory: fileInventory,\n    project_path: projectPath\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300],
+      "id": "scan-files",
+      "name": "Scan Project Files"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create comprehensive Excel database\nconst data = $input.first().json;\nconst outputPath = $node['Setup Project Paths'].json.output_path;\nconst fs = require('fs');\nconst path = require('path');\nconst XLSX = require('xlsx');\n\n// Ensure output directory exists\nif (!fs.existsSync(outputPath)) {\n  fs.mkdirSync(outputPath, { recursive: true });\n}\n\n// Create workbook\nconst workbook = XLSX.utils.book_new();\n\n// Sheet 1: File Inventory\nconst fileInventory = data.file_inventory;\nconst ws1 = XLSX.utils.json_to_sheet(fileInventory);\nXLSX.utils.book_append_sheet(workbook, ws1, 'File_Inventory');\n\n// Sheet 2: Project Summary\nconst summaryData = [\n  { Metric: 'Total Files', Value: data.total_files },\n  { Metric: 'DWG Files', Value: data.dwg_files },\n  { Metric: 'PDF Files', Value: data.pdf_files },\n  { Metric: 'Total Size (MB)', Value: fileInventory.reduce((sum, file) => sum + file.size_mb, 0) },\n  { Metric: 'Processing Date', Value: new Date().toISOString().split('T')[0] },\n  { Metric: 'Status', Value: 'Ready for Processing' }\n];\nconst ws2 = XLSX.utils.json_to_sheet(summaryData);\nXLSX.utils.book_append_sheet(workbook, ws2, 'Project_Summary');\n\n// Sheet 3: Processing Plan\nconst processingPlan = fileInventory.map(file => ({\n  file_name: file.file_name,\n  action: file.file_type === 'DWG' ? 'Convert to Excel' : 'OCR + Text extraction',\n  tool: file.file_type === 'DWG' ? 'DwgExporter.exe' : 'Tesseract OCR',\n  expected_output: file.file_type === 'DWG' ? 'Element data + quantities' : 'Text + dimensions',\n  estimated_time: file.file_type === 'DWG' ? '2-5 minutes' : '1-3 minutes',\n  priority: file.priority\n}));\nconst ws3 = XLSX.utils.json_to_sheet(processingPlan);\nXLSX.utils.book_append_sheet(workbook, ws3, 'Processing_Plan');\n\n// Sheet 4: Construction Categories\nconst categories = [\n  { category: 'Structural', description: 'Foundations, beams, columns, slabs', priority: 'Critical' },\n  { category: 'Architectural', description: 'Walls, doors, windows, finishes', priority: 'High' },\n  { category: 'MEP', description: 'Mechanical, electrical, plumbing', priority: 'High' },\n  { category: 'Site', description: 'Landscaping, utilities, paving', priority: 'Medium' },\n  { category: 'Interior', description: 'Furniture, fixtures, equipment', priority: 'Medium' },\n  { category: 'Safety', description: 'Fire safety, security, emergency', priority: 'Critical' }\n];\nconst ws4 = XLSX.utils.json_to_sheet(categories);\nXLSX.utils.book_append_sheet(workbook, ws4, 'Construction_Categories');\n\n// Sheet 5: Data Requirements\nconst requirements = [\n  { requirement: 'Element ID', description: 'Unique identifier for each element', required: 'Yes' },\n  { requirement: 'Element Type', description: 'Category/type of construction element', required: 'Yes' },\n  { requirement: 'Dimensions', description: 'Length, width, height, thickness', required: 'Yes' },\n  { requirement: 'Quantities', description: 'Volume, area, length, count', required: 'Yes' },\n  { requirement: 'Materials', description: 'Material specifications and properties', required: 'Yes' },\n  { requirement: 'Location', description: 'Floor, room, coordinates', required: 'Yes' },\n  { requirement: 'Cost Data', description: 'Unit costs, labor rates, equipment', required: 'No' },\n  { requirement: 'Schedule', description: 'Construction sequence, dependencies', required: 'No' }\n];\nconst ws5 = XLSX.utils.json_to_sheet(requirements);\nXLSX.utils.book_append_sheet(workbook, ws5, 'Data_Requirements');\n\n// Save Excel file\nconst excelPath = path.join(outputPath, 'Data_Driven_Construction_Database.xlsx');\nXLSX.writeFile(workbook, excelPath);\n\nconsole.log(`Excel database created: ${excelPath}`);\n\nreturn [{\n  json: {\n    excel_file: excelPath,\n    total_files: data.total_files,\n    dwg_files: data.dwg_files,\n    pdf_files: data.pdf_files,\n    status: 'Excel database created successfully'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "id": "create-excel-database",
+      "name": "Create Excel Database"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate processing commands for all DWG files\nconst data = $input.first().json;\nconst dwgConverter = $node['Setup Project Paths'].json.dwg_converter;\nconst outputPath = $node['Setup Project Paths'].json.output_path;\nconst fileInventory = $node['Scan Project Files'].json.file_inventory;\n\n// Filter DWG files\nconst dwgFiles = fileInventory.filter(file => file.file_type === 'DWG');\n\nconsole.log(`Generating processing commands for ${dwgFiles.length} DWG files`);\n\n// Create processing commands\nconst processingCommands = [];\nconst outputDir = path.join(outputPath, 'Converted_Data');\n\nfor (const file of dwgFiles) {\n  const command = `\"${dwgConverter}\" \"${file.file_path}\" \"${outputDir}\"`;\n  processingCommands.push({\n    file_name: file.file_name,\n    file_path: file.file_path,\n    command: command,\n    output_directory: outputDir,\n    status: 'Ready to process'\n  });\n}\n\n// Create batch script content\nconst batchScript = `@echo off\necho Starting DWG conversion process...\necho.\n\nmkdir \"${outputDir}\" 2>nul\n\n${processingCommands.map(cmd => `echo Processing: ${cmd.file_name}\n${cmd.command}\nif %errorlevel% equ 0 (\n    echo ✅ Success: ${cmd.file_name}\n) else (\n    echo ❌ Failed: ${cmd.file_name}\n)\necho.`).join('\\n')}\n\necho Conversion process completed!\npause\n`;\n\n// Create PowerShell script content\nconst psScript = `# PowerShell script for DWG conversion\nWrite-Host \"Starting DWG conversion process...\" -ForegroundColor Green\nWrite-Host \"\"\n\n# Create output directory\nNew-Item -ItemType Directory -Force -Path \"${outputDir}\" | Out-Null\n\n${processingCommands.map(cmd => `Write-Host \"Processing: ${cmd.file_name}\" -ForegroundColor Yellow\n& ${cmd.command}\nif ($LASTEXITCODE -eq 0) {\n    Write-Host \"✅ Success: ${cmd.file_name}\" -ForegroundColor Green\n} else {\n    Write-Host \"❌ Failed: ${cmd.file_name}\" -ForegroundColor Red\n}\nWrite-Host \"\"`).join('\\n')}\n\nWrite-Host \"Conversion process completed!\" -ForegroundColor Green\nRead-Host \"Press Enter to continue\"\n`;\n\nreturn [{\n  json: {\n    total_commands: processingCommands.length,\n    processing_commands: processingCommands,\n    batch_script: batchScript,\n    powershell_script: psScript,\n    output_directory: outputDir,\n    status: 'Processing commands generated'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "id": "generate-processing-commands",
+      "name": "Generate Processing Commands"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save processing scripts to files\nconst data = $input.first().json;\nconst outputPath = $node['Setup Project Paths'].json.output_path;\nconst fs = require('fs');\nconst path = require('path');\n\n// Save batch script\nconst batchPath = path.join(outputPath, 'process_dwg_files.bat');\nfs.writeFileSync(batchPath, data.batch_script, 'utf8');\n\n// Save PowerShell script\nconst psPath = path.join(outputPath, 'process_dwg_files.ps1');\nfs.writeFileSync(psPath, data.powershell_script, 'utf8');\n\n// Save processing commands as JSON\nconst commandsPath = path.join(outputPath, 'processing_commands.json');\nfs.writeFileSync(commandsPath, JSON.stringify(data.processing_commands, null, 2), 'utf8');\n\nconsole.log(`Processing scripts saved to: ${outputPath}`);\n\nreturn [{\n  json: {\n    batch_script: batchPath,\n    powershell_script: psPath,\n    commands_json: commandsPath,\n    total_files: data.total_commands,\n    status: 'Processing scripts created successfully'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 300],
+      "id": "save-processing-scripts",
+      "name": "Save Processing Scripts"
+    },
+    {
+      "parameters": {
+        "command": "=echo ✅ Data-Driven Construction Excel Pipeline Complete! & echo. & echo 📊 Summary: & echo   - Total files found: {{ $json.total_files }} & echo   - DWG files: {{ $node['Scan Project Files'].json.dwg_files }} & echo   - PDF files: {{ $node['Scan Project Files'].json.pdf_files }} & echo. & echo 📁 Output files created: & echo   - Excel Database: Data_Driven_Construction_Database.xlsx & echo   - Batch Script: process_dwg_files.bat & echo   - PowerShell Script: process_dwg_files.ps1 & echo   - Commands JSON: processing_commands.json & echo. & echo 🎯 Next steps: & echo   1. Review the Excel database & echo   2. Run the batch script to convert DWG files & echo   3. Use the data for cost estimation and analysis & echo. & echo ✅ Workflow completed successfully!"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1600, 300],
+      "id": "completion-summary",
+      "name": "Show Completion Summary"
+    }
+  ],
+  "connections": {
+    "Start Project Processing": {
+      "main": [
+        [
+          {
+            "node": "Setup Project Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Project Paths": {
+      "main": [
+        [
+          {
+            "node": "Scan Project Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scan Project Files": {
+      "main": [
+        [
+          {
+            "node": "Create Excel Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Excel Database": {
+      "main": [
+        [
+          {
+            "node": "Generate Processing Commands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Processing Commands": {
+      "main": [
+        [
+          {
+            "node": "Save Processing Scripts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Processing Scripts": {
+      "main": [
+        [
+          {
+            "node": "Show Completion Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "instanceId": "project-excel-pipeline"
+  },
+  "id": "ProjectExcelPipeline",
+  "tags": []
+}

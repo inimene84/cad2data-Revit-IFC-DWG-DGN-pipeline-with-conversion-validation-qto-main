@@ -1,0 +1,120 @@
+{
+  "name": "Error Handler - Construction AI Platform",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "id": "trigger-001",
+      "name": "Error Handler Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Simplified Error Handler\n// Centralized error handling for all workflows\n\nconst input = $input.first().json;\nconst error = input.error || input;\nconst context = input.context || {};\n\n// Error handler class\nclass ErrorHandler {\n    handleError(error, context = {}) {\n        const errorType = this.getErrorType(error);\n        const errorMessage = this.getErrorMessage(error);\n        \n        return {\n            success: false,\n            error: {\n                message: errorMessage,\n                type: errorType,\n                code: error.code || error.statusCode || 'UNKNOWN_ERROR',\n                timestamp: new Date().toISOString(),\n                executionId: context.executionId || $execution.id,\n                workflowName: context.workflowName || 'unknown',\n                context: context\n            },\n            recovery: {\n                suggestions: this.getRecoverySuggestions(errorType),\n                canRetry: this.canRetry(errorType),\n                retryAfter: this.getRetryAfter(errorType)\n            }\n        };\n    }\n    \n    getErrorType(error) {\n        if (error?.code === 'ENOTFOUND' || error?.code === 'ECONNREFUSED') return 'network_error';\n        if (error?.code === 'ETIMEDOUT') return 'timeout_error';\n        if (error?.statusCode >= 400 && error?.statusCode < 500) return 'client_error';\n        if (error?.statusCode >= 500) return 'server_error';\n        if (error?.message?.includes('not found')) return 'not_found';\n        if (error?.message?.includes('unauthorized') || error?.message?.includes('forbidden')) return 'authentication_error';\n        if (error?.message?.includes('validation') || error?.message?.includes('invalid')) return 'validation_error';\n        return 'unknown_error';\n    }\n    \n    getErrorMessage(error) {\n        if (typeof error === 'string') return error;\n        return error?.message || error?.error?.message || 'An unexpected error occurred';\n    }\n    \n    getRecoverySuggestions(errorType) {\n        const suggestions = {\n            network_error: ['Check your internet connection', 'Verify the service is available', 'Try again in a few moments'],\n            timeout_error: ['The request took too long', 'Try again with a smaller file', 'Check if the service is overloaded'],\n            client_error: ['Check your input parameters', 'Verify file format and size', 'Ensure all required fields are provided'],\n            server_error: ['Service temporarily unavailable', 'Try again later', 'Contact support if problem persists'],\n            not_found: ['Check if the file/resource exists', 'Verify the file ID or path', 'Ensure you have access permissions'],\n            authentication_error: ['Check your API credentials', 'Verify authentication tokens', 'Ensure your account has necessary permissions'],\n            validation_error: ['Check input format', 'Verify required fields', 'Ensure data types are correct'],\n            unknown_error: ['Try again', 'Check logs for details', 'Contact support if problem persists']\n        };\n        return suggestions[errorType] || suggestions.unknown_error;\n    }\n    \n    canRetry(errorType) {\n        return ['network_error', 'timeout_error', 'server_error'].includes(errorType);\n    }\n    \n    getRetryAfter(errorType) {\n        const delays = { network_error: 5, timeout_error: 10, server_error: 30, default: 60 };\n        return delays[errorType] || delays.default;\n    }\n}\n\nconst handler = new ErrorHandler();\nconst errorResponse = handler.handleError(error, context);\n\nreturn [{ json: errorResponse }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "id": "error-handler-001",
+      "name": "Error Handler"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "error_log",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        300
+      ],
+      "id": "log-error-001",
+      "name": "Log Error"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "error_response",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        300
+      ],
+      "id": "return-error-001",
+      "name": "Return Error Response"
+    }
+  ],
+  "connections": {
+    "Error Handler Trigger": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "tags": [
+    {
+      "id": "error-handler",
+      "name": "error-handler"
+    },
+    {
+      "id": "utility",
+      "name": "utility"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "🚧 Error Handler Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "3f9a9e3a-2b4f-4a5e-9b2c-6d8e8a7b0c1d",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const error = $input.first().json.error;\nconst execution = $input.first().json.execution;\n\nlet errorType = 'unknown_error';\nlet statusCode = 500;\nlet message = 'An unexpected error occurred.';\nlet canRetry = false;\nlet retryAfter = 60;\n\nconst errorMessage = (error.message || '').toLowerCase();\nconst errorStack = (error.stack || '').toLowerCase();\n\n// Classify error\nif (errorMessage.includes('validation')) {\n  errorType = 'validation_error';\n  statusCode = 400;\n  message = 'Input validation failed. Please check your request data.';\n} else if (errorMessage.includes('not found') || statusCode === 404) {\n  errorType = 'not_found';\n  statusCode = 404;\n  message = 'The requested resource was not found.';\n} else if (errorMessage.includes('authentication') || statusCode === 401 || statusCode === 403) {\n  errorType = 'authentication_error';\n  statusCode = 401;\n  message = 'Authentication failed. Please check your API key or token.';\n} else if (errorMessage.includes('timeout')) {\n  errorType = 'timeout_error';\n  statusCode = 504;\n  message = 'The operation timed out. Please try again later.';\n  canRetry = true;\n} else if (errorMessage.includes('network') || errorMessage.includes('connection')) {\n  errorType = 'network_error';\n  statusCode = 503;\n  message = 'A network error occurred. The service may be temporarily unavailable.';\n  canRetry = true;\n}\n\n// Recovery Suggestions\nconst suggestions = [];\nif (canRetry) {\n  suggestions.push(`You can retry the operation after ${retryAfter} seconds.`);\n} else {\n  suggestions.push('Check the input data and try again.');\n  suggestions.push('If the problem persists, contact support and provide the execution ID.');\n}\n\nconst errorResponse = {\n  success: false,\n  error: {\n    message: message,\n    type: errorType,\n    code: `ERR_${errorType.toUpperCase()}`,\n    timestamp: new Date().toISOString(),\n    executionId: execution.id,\n    workflowName: execution.workflow.name,\n    originalError: error.message\n  },\n  recovery: {\n    suggestions: suggestions,\n    canRetry: canRetry,\n    retryAfter: retryAfter\n  }\n};\n\nreturn [{ json: errorResponse, statusCode: statusCode }];"
+      },
+      "id": "b1c2d3e4-f5a6-b7c8-d9e0-a1b2c3d4e5f6",
+      "name": "Classify Error & Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Classify Error & Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "triggerCount": 0,
+  "versionId": "1.0"
+}

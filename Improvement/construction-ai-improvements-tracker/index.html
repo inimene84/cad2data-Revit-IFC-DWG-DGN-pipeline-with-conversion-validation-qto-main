@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction AI Platform - Improvements Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>🏗️ Construction AI Platform</h1>
+                    <p class="subtitle">Improvements Management</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn--secondary btn--sm" id="themeToggle">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                    <button class="btn btn--primary btn--sm" id="exportBtn">
+                        📊 Export Report
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="implementation">Implementation</button>
+            <button class="tab-btn" data-tab="progress">Progress</button>
+            <button class="tab-btn" data-tab="resources">Resources</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard-tab">
+                <div class="dashboard-header">
+                    <div class="metrics-row">
+                        <div class="metric-card">
+                            <div class="metric-value" id="totalImprovements">0</div>
+                            <div class="metric-label">Total Improvements</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="completedPercentage">0%</div>
+                            <div class="metric-label">Completed</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="totalHours">0h</div>
+                            <div class="metric-label">Total Hours</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="currentPhase">-</div>
+                            <div class="metric-label">Current Phase</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label class="filter-label">Phase:</label>
+                        <select class="form-control" id="filterPhase">
+                            <option value="all">All Phases</option>
+                            <option value="1">Phase 1: Quick Wins</option>
+                            <option value="2">Phase 2: Core Improvements</option>
+                            <option value="3">Phase 3: Advanced Features</option>
+                            <option value="4">Phase 4: Optimization &amp; Scaling</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Status:</label>
+                        <select class="form-control" id="filterStatus">
+                            <option value="all">All Status</option>
+                            <option value="not-started">Not Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group search-group">
+                        <label class="filter-label">Search:</label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search improvements...">
+                    </div>
+                </div>
+
+                <!-- Category Cards Grid -->
+                <div class="categories-grid" id="categoriesGrid"></div>
+
+                <!-- Improvements List (shown when category expanded) -->
+                <div class="improvements-list" id="improvementsList" style="display: none;"></div>
+            </div>
+
+            <!-- Implementation Tab -->
+            <div class="tab-content" id="implementation-tab">
+                <div class="implementation-header">
+                    <h2>4-Phase Implementation Roadmap</h2>
+                    <p>Structured approach to platform improvements</p>
+                </div>
+                <div class="phases-container" id="phasesContainer"></div>
+            </div>
+
+            <!-- Progress Tab -->
+            <div class="tab-content" id="progress-tab">
+                <div class="progress-header">
+                    <h2>Progress Analytics</h2>
+                    <p>Track completion and time spent across all improvements</p>
+                </div>
+                <div class="progress-content">
+                    <div class="progress-charts">
+                        <div class="chart-container">
+                            <h3>Overall Progress</h3>
+                            <canvas id="overallProgressChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Progress by Phase</h3>
+                            <canvas id="phaseProgressChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Progress by Category</h3>
+                            <canvas id="categoryProgressChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Time Tracking</h3>
+                            <canvas id="timeTrackingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources Tab -->
+            <div class="tab-content" id="resources-tab">
+                <div class="resources-header">
+                    <h2>Development Tools &amp; Resources</h2>
+                    <p>Essential tools for implementing platform improvements</p>
+                </div>
+                <div class="resources-content" id="resourcesContent"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Improvement Detail Modal -->
+    <div class="modal" id="improvementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <label class="detail-label">Description</label>
+                    <p id="modalDescription"></p>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-section">
+                        <label class="detail-label">Estimated Effort</label>
+                        <p id="modalHours"></p>
+                    </div>
+                    <div class="detail-section">
+                        <label class="detail-label">Phase</label>
+                        <p id="modalPhase"></p>
+                    </div>
+                    <div class="detail-section">
+                        <label class="detail-label">Category</label>
+                        <p id="modalCategory"></p>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <label class="detail-label">Status</label>
+                    <select class="form-control" id="modalStatus">
+                        <option value="not-started">Not Started</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="detail-section">
+                    <label class="detail-label">Notes</label>
+                    <textarea class="form-control" id="modalNotes" rows="4" placeholder="Add implementation notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--secondary" id="modalCancel">Cancel</button>
+                <button class="btn btn--primary" id="modalSave">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

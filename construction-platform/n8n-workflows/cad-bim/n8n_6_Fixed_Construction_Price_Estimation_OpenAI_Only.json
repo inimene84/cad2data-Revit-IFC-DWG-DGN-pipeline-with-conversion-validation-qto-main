@@ -1,0 +1,324 @@
+{
+  "name": "n8n_6_Fixed_Construction_Price_Estimation_OpenAI_Only",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "id": "manual-trigger",
+      "name": "Start Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "converter-path",
+              "name": "path_to_converter",
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\DDC_Converter_IFC\\datadrivenlibs\\IfcExporter.exe",
+              "type": "string"
+            },
+            {
+              "id": "project-file",
+              "name": "project_file",
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\Sample_Projects\\Ifc2x3_Parking_sample.ifc",
+              "type": "string"
+            },
+            {
+              "id": "output-folder",
+              "name": "output_folder",
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\Sample_Projects",
+              "type": "string"
+            },
+            {
+              "id": "country",
+              "name": "country",
+              "value": "Germany",
+              "type": "string"
+            },
+            {
+              "id": "currency",
+              "name": "currency",
+              "value": "EUR",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [600, 300],
+      "id": "setup-parameters",
+      "name": "Setup Parameters"
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "=\"{{ $json.path_to_converter }}\" \"{{ $json.project_file }}\" \"{{ $json.output_folder }}\\converted_data.xlsx\" \"{{ $json.output_folder }}\\converted_data.dae\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "id": "convert-file",
+      "name": "Convert IFC to Excel"
+    },
+    {
+      "parameters": {
+        "filePath": "={{ $json.output_folder }}\\converted_data.xlsx"
+      },
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "id": "read-excel",
+      "name": "Read Excel File"
+    },
+    {
+      "parameters": {
+        "fileFormat": "xlsx",
+        "options": {
+          "headerRow": true,
+          "includeEmptyCells": false
+        }
+      },
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "id": "parse-excel",
+      "name": "Parse Excel Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process and group building elements for cost estimation\nconst items = $input.all();\nconst country = $node['Setup Parameters'].json.country;\nconst currency = $node['Setup Parameters'].json.currency;\n\nconsole.log(`Processing ${items.length} elements for cost estimation`);\n\n// Group elements by type and calculate quantities\nconst groupedElements = {};\nconst volumeCol = '[BaseQuantities] GrossVolume';\nconst areaCol = '[BaseQuantities] GrossArea';\nconst lengthCol = '[BaseQuantities] Length';\n\nitems.forEach(item => {\n  const data = item.json;\n  const category = data['Category'] || 'Unknown';\n  const name = data['Name'] || 'Unnamed';\n  \n  // Get quantities\n  const volume = parseFloat(data[volumeCol]) || 0;\n  const area = parseFloat(data[areaCol]) || 0;\n  const length = parseFloat(data[lengthCol]) || 0;\n  \n  // Create group key\n  const groupKey = `${category}_${name.split(':')[0]}`;\n  \n  if (!groupedElements[groupKey]) {\n    groupedElements[groupKey] = {\n      category: category,\n      name: name.split(':')[0],\n      total_volume: 0,\n      total_area: 0,\n      total_length: 0,\n      element_count: 0,\n      country: country,\n      currency: currency\n    };\n  }\n  \n  groupedElements[groupKey].total_volume += volume;\n  groupedElements[groupKey].total_area += area;\n  groupedElements[groupKey].total_length += length;\n  groupedElements[groupKey].element_count += 1;\n});\n\n// Convert to array for processing\nconst groupedArray = Object.values(groupedElements).filter(group => \n  group.total_volume > 0 || group.total_area > 0 || group.total_length > 0\n);\n\nconsole.log(`Created ${groupedArray.length} element groups for cost estimation`);\n\nreturn groupedArray.map(group => ({ json: group }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 300],
+      "id": "group-elements",
+      "name": "Group Elements for Cost Estimation"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an expert construction cost estimator specializing in residential and commercial buildings. Your task is to analyze building elements and provide accurate cost estimates.\n\nFor each building element group, provide:\n1. Material classification (concrete, steel, wood, etc.)\n2. Unit cost estimation in the specified currency\n3. Total cost calculation\n4. Confidence level (1-100%)\n\nUse current market prices for the specified country. Consider:\n- Material costs per unit (m³, m², m, piece)\n- Labor costs (typically 30-40% of material costs)\n- Equipment and overhead (typically 15-20% of material costs)\n- Regional price variations\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"material_classification\": \"concrete\",\n  \"unit_cost\": 450,\n  \"unit\": \"EUR/m³\",\n  \"total_cost\": 22500,\n  \"confidence\": 85,\n  \"cost_breakdown\": {\n    \"materials\": 15000,\n    \"labor\": 6000,\n    \"equipment_overhead\": 1500\n  },\n  \"notes\": \"Standard concrete construction with normal reinforcement\"\n}",
+              "role": "system"
+            },
+            {
+              "content": "Analyze this building element group and provide cost estimation:\n\nElement: {{ $json.name }}\nCategory: {{ $json.category }}\nTotal Volume: {{ $json.total_volume }} m³\nTotal Area: {{ $json.total_area }} m²\nTotal Length: {{ $json.total_length }} m\nElement Count: {{ $json.element_count }}\nCountry: {{ $json.country }}\nCurrency: {{ $json.currency }}\n\nProvide detailed cost estimation for this element group.",
+              "role": "user"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.3,
+      "position": [1600, 300],
+      "id": "ai-cost-estimation",
+      "name": "AI Cost Estimation",
+      "credentials": {
+        "openAiApi": {
+          "id": "5SwKOx6OOukR6C0w",
+          "name": "OpenAi account n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process AI cost estimation results\nconst aiResponse = $input.first().json;\nconst originalData = $node['Group Elements for Cost Estimation'].json;\n\nconsole.log('Processing AI cost estimation response');\n\n// Extract JSON from AI response\nlet costData;\ntry {\n  let responseText = aiResponse.content || aiResponse.message || aiResponse.response || '';\n  \n  // Try to extract JSON from response\n  const jsonMatch = responseText.match(/```json\\n?([\\s\\S]*?)\\n?```/) || responseText.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    responseText = jsonMatch[1] || jsonMatch[0];\n  }\n  \n  costData = JSON.parse(responseText);\n} catch (error) {\n  console.error('Error parsing AI response:', error);\n  // Fallback to basic estimation\n  const volume = originalData.total_volume || 0;\n  const area = originalData.total_area || 0;\n  const length = originalData.total_length || 0;\n  \n  // Basic cost estimation based on element type\n  let unitCost = 300; // Default EUR/m³\n  let unit = 'EUR/m³';\n  let quantity = volume;\n  \n  if (area > volume && area > length) {\n    unitCost = 50; // EUR/m²\n    unit = 'EUR/m²';\n    quantity = area;\n  } else if (length > volume && length > area) {\n    unitCost = 30; // EUR/m\n    unit = 'EUR/m';\n    quantity = length;\n  }\n  \n  const totalCost = quantity * unitCost;\n  \n  costData = {\n    material_classification: 'unknown',\n    unit_cost: unitCost,\n    unit: unit,\n    total_cost: totalCost,\n    confidence: 60,\n    cost_breakdown: {\n      materials: totalCost * 0.6,\n      labor: totalCost * 0.3,\n      equipment_overhead: totalCost * 0.1\n    },\n    notes: 'Basic estimation due to AI parsing error'\n  };\n}\n\n// Combine original data with cost estimation\nconst result = {\n  ...originalData,\n  material_classification: costData.material_classification,\n  unit_cost: costData.unit_cost,\n  unit: costData.unit,\n  total_cost: costData.total_cost,\n  confidence: costData.confidence,\n  cost_breakdown: costData.cost_breakdown,\n  notes: costData.notes,\n  estimation_method: 'ai_enhanced'\n};\n\nconsole.log(`Cost estimation for ${result.name}: €${result.total_cost:,.2f}`);\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1800, 300],
+      "id": "process-cost-estimation",
+      "name": "Process Cost Estimation Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate comprehensive cost estimation report\nconst items = $input.all();\nconst country = $node['Setup Parameters'].json.country;\nconst currency = $node['Setup Parameters'].json.currency;\n\nconsole.log(`Generating cost report for ${items.length} element groups`);\n\n// Calculate totals\nlet totalCost = 0;\nlet totalVolume = 0;\nlet totalArea = 0;\nlet totalLength = 0;\nlet totalElements = 0;\nlet avgConfidence = 0;\n\nconst costBreakdown = {};\nconst materialBreakdown = {};\n\nitems.forEach(item => {\n  const data = item.json;\n  totalCost += data.total_cost || 0;\n  totalVolume += data.total_volume || 0;\n  totalArea += data.total_area || 0;\n  totalLength += data.total_length || 0;\n  totalElements += data.element_count || 0;\n  avgConfidence += data.confidence || 0;\n  \n  // Group by category\n  const category = data.category || 'Unknown';\n  if (!costBreakdown[category]) {\n    costBreakdown[category] = {\n      count: 0,\n      cost: 0,\n      volume: 0,\n      area: 0\n    };\n  }\n  costBreakdown[category].count += data.element_count || 0;\n  costBreakdown[category].cost += data.total_cost || 0;\n  costBreakdown[category].volume += data.total_volume || 0;\n  costBreakdown[category].area += data.total_area || 0;\n  \n  // Group by material\n  const material = data.material_classification || 'Unknown';\n  if (!materialBreakdown[material]) {\n    materialBreakdown[material] = {\n      count: 0,\n      cost: 0,\n      unit_cost: 0\n    };\n  }\n  materialBreakdown[material].count += data.element_count || 0;\n  materialBreakdown[material].cost += data.total_cost || 0;\n  materialBreakdown[material].unit_cost = data.unit_cost || 0;\n});\n\navgConfidence = avgConfidence / items.length;\n\n// Sort by cost\nconst sortedItems = items.sort((a, b) => (b.json.total_cost || 0) - (a.json.total_cost || 0));\n\n// Generate HTML report\nconst htmlReport = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Construction Cost Estimation Report</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n        .header { text-align: center; margin-bottom: 30px; }\n        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }\n        .metric { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }\n        .metric-value { font-size: 2em; font-weight: bold; color: #2c3e50; }\n        .metric-label { color: #7f8c8d; margin-top: 5px; }\n        table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }\n        th { background: #34495e; color: white; }\n        .high-cost { color: #e74c3c; font-weight: bold; }\n        .medium-cost { color: #f39c12; font-weight: bold; }\n        .low-cost { color: #27ae60; font-weight: bold; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>🏗️ Construction Cost Estimation Report</h1>\n            <p>Generated on ${new Date().toLocaleString()}</p>\n            <p>Country: ${country} | Currency: ${currency}</p>\n        </div>\n        \n        <div class=\"summary\">\n            <div class=\"metric\">\n                <div class=\"metric-value\">${currency} ${totalCost.toLocaleString()}</div>\n                <div class=\"metric-label\">Total Estimated Cost</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${totalElements.toLocaleString()}</div>\n                <div class=\"metric-label\">Total Elements</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${totalVolume.toFixed(1)} m³</div>\n                <div class=\"metric-label\">Total Volume</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${totalArea.toFixed(1)} m²</div>\n                <div class=\"metric-label\">Total Area</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${avgConfidence.toFixed(1)}%</div>\n                <div class=\"metric-label\">Avg Confidence</div>\n            </div>\n        </div>\n        \n        <h2>📊 Cost Breakdown by Element Type</h2>\n        <table>\n            <thead>\n                <tr>\n                    <th>Element Type</th>\n                    <th>Count</th>\n                    <th>Volume (m³)</th>\n                    <th>Area (m²)</th>\n                    <th>Total Cost (${currency})</th>\n                    <th>% of Total</th>\n                </tr>\n            </thead>\n            <tbody>\n                ${Object.entries(costBreakdown).map(([category, data]) => `\n                    <tr>\n                        <td>${category}</td>\n                        <td>${data.count.toLocaleString()}</td>\n                        <td>${data.volume.toFixed(1)}</td>\n                        <td>${data.area.toFixed(1)}</td>\n                        <td class=\"${data.cost > totalCost * 0.1 ? 'high-cost' : data.cost > totalCost * 0.05 ? 'medium-cost' : 'low-cost'}\">${data.cost.toLocaleString()}</td>\n                        <td>${((data.cost / totalCost) * 100).toFixed(1)}%</td>\n                    </tr>\n                `).join('')}\n            </tbody>\n        </table>\n        \n        <h2>🔝 Top 10 Most Expensive Elements</h2>\n        <table>\n            <thead>\n                <tr>\n                    <th>Element Name</th>\n                    <th>Category</th>\n                    <th>Material</th>\n                    <th>Quantity</th>\n                    <th>Unit Cost</th>\n                    <th>Total Cost (${currency})</th>\n                    <th>Confidence</th>\n                </tr>\n            </thead>\n            <tbody>\n                ${sortedItems.slice(0, 10).map(item => {\n                    const data = item.json;\n                    const quantity = Math.max(data.total_volume, data.total_area, data.total_length);\n                    const unit = data.total_volume > data.total_area && data.total_volume > data.total_length ? 'm³' : \n                                data.total_area > data.total_length ? 'm²' : 'm';\n                    return `\n                        <tr>\n                            <td>${data.name}</td>\n                            <td>${data.category}</td>\n                            <td>${data.material_classification}</td>\n                            <td>${quantity.toFixed(1)} ${unit}</td>\n                            <td>${data.unit_cost} ${data.unit}</td>\n                            <td class=\"${data.total_cost > totalCost * 0.1 ? 'high-cost' : data.total_cost > totalCost * 0.05 ? 'medium-cost' : 'low-cost'}\">${data.total_cost.toLocaleString()}</td>\n                            <td>${data.confidence}%</td>\n                        </tr>\n                    `;\n                }).join('')}\n            </tbody>\n        </table>\n        \n        <h2>📋 Material Breakdown</h2>\n        <table>\n            <thead>\n                <tr>\n                    <th>Material Type</th>\n                    <th>Element Count</th>\n                    <th>Total Cost (${currency})</th>\n                    <th>% of Total</th>\n                </tr>\n            </thead>\n            <tbody>\n                ${Object.entries(materialBreakdown).map(([material, data]) => `\n                    <tr>\n                        <td>${material}</td>\n                        <td>${data.count.toLocaleString()}</td>\n                        <td>${data.cost.toLocaleString()}</td>\n                        <td>${((data.cost / totalCost) * 100).toFixed(1)}%</td>\n                    </tr>\n                `).join('')}\n            </tbody>\n        </table>\n        \n        <div style=\"margin-top: 30px; padding: 20px; background: #ecf0f1; border-radius: 8px;\">\n            <h3>📝 Notes</h3>\n            <ul>\n                <li>Costs are estimated using current market prices for ${country}</li>\n                <li>Confidence levels indicate reliability of cost estimates</li>\n                <li>High-cost elements (>10% of total) should be reviewed carefully</li>\n                <li>This is an automated estimation - professional review recommended</li>\n            </ul>\n        </div>\n    </div>\n</body>\n</html>`;\n\n// Save HTML report\nconst fs = require('fs');\nconst path = require('path');\nconst outputPath = path.join($node['Setup Parameters'].json.output_folder, 'cost_estimation_report.html');\nfs.writeFileSync(outputPath, htmlReport);\n\nconsole.log(`HTML report saved to: ${outputPath}`);\n\n// Return summary data\nreturn [{\n  json: {\n    total_cost: totalCost,\n    total_elements: totalElements,\n    total_volume: totalVolume,\n    total_area: totalArea,\n    avg_confidence: avgConfidence,\n    cost_breakdown: costBreakdown,\n    material_breakdown: materialBreakdown,\n    top_elements: sortedItems.slice(0, 10).map(item => item.json),\n    report_path: outputPath,\n    country: country,\n    currency: currency\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300],
+      "id": "generate-report",
+      "name": "Generate Cost Report"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare binary data for HTML file\nconst reportData = $input.first().json;\nconst htmlContent = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Construction Cost Estimation Report</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n        .header { text-align: center; margin-bottom: 30px; }\n        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }\n        .metric { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }\n        .metric-value { font-size: 2em; font-weight: bold; color: #2c3e50; }\n        .metric-label { color: #7f8c8d; margin-top: 5px; }\n        table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }\n        th { background: #34495e; color: white; }\n        .high-cost { color: #e74c3c; font-weight: bold; }\n        .medium-cost { color: #f39c12; font-weight: bold; }\n        .low-cost { color: #27ae60; font-weight: bold; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>🏗️ Construction Cost Estimation Report</h1>\n            <p>Generated on ${new Date().toLocaleString()}</p>\n            <p>Country: ${reportData.country} | Currency: ${reportData.currency}</p>\n        </div>\n        \n        <div class=\"summary\">\n            <div class=\"metric\">\n                <div class=\"metric-value\">${reportData.currency} ${reportData.total_cost.toLocaleString()}</div>\n                <div class=\"metric-label\">Total Estimated Cost</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${reportData.total_elements.toLocaleString()}</div>\n                <div class=\"metric-label\">Total Elements</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${reportData.total_volume.toFixed(1)} m³</div>\n                <div class=\"metric-label\">Total Volume</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${reportData.total_area.toFixed(1)} m²</div>\n                <div class=\"metric-label\">Total Area</div>\n            </div>\n            <div class=\"metric\">\n                <div class=\"metric-value\">${reportData.avg_confidence.toFixed(1)}%</div>\n                <div class=\"metric-label\">Avg Confidence</div>\n            </div>\n        </div>\n        \n        <h2>📊 Cost Breakdown by Element Type</h2>\n        <table>\n            <thead>\n                <tr>\n                    <th>Element Type</th>\n                    <th>Count</th>\n                    <th>Volume (m³)</th>\n                    <th>Area (m²)</th>\n                    <th>Total Cost (${reportData.currency})</th>\n                    <th>% of Total</th>\n                </tr>\n            </thead>\n            <tbody>\n                ${Object.entries(reportData.cost_breakdown).map(([category, data]) => `\n                    <tr>\n                        <td>${category}</td>\n                        <td>${data.count.toLocaleString()}</td>\n                        <td>${data.volume.toFixed(1)}</td>\n                        <td>${data.area.toFixed(1)}</td>\n                        <td class=\"${data.cost > reportData.total_cost * 0.1 ? 'high-cost' : data.cost > reportData.total_cost * 0.05 ? 'medium-cost' : 'low-cost'}\">${data.cost.toLocaleString()}</td>\n                        <td>${((data.cost / reportData.total_cost) * 100).toFixed(1)}%</td>\n                    </tr>\n                `).join('')}\n            </tbody>\n        </table>\n        \n        <h2>🔝 Top 10 Most Expensive Elements</h2>\n        <table>\n            <thead>\n                <tr>\n                    <th>Element Name</th>\n                    <th>Category</th>\n                    <th>Material</th>\n                    <th>Quantity</th>\n                    <th>Unit Cost</th>\n                    <th>Total Cost (${reportData.currency})</th>\n                    <th>Confidence</th>\n                </tr>\n            </thead>\n            <tbody>\n                ${reportData.top_elements.map(item => {\n                    const quantity = Math.max(item.total_volume, item.total_area, item.total_length);\n                    const unit = item.total_volume > item.total_area && item.total_volume > item.total_length ? 'm³' : \n                                item.total_area > item.total_length ? 'm²' : 'm';\n                    return `\n                        <tr>\n                            <td>${item.name}</td>\n                            <td>${item.category}</td>\n                            <td>${item.material_classification}</td>\n                            <td>${quantity.toFixed(1)} ${unit}</td>\n                            <td>${item.unit_cost} ${item.unit}</td>\n                            <td class=\"${item.total_cost > reportData.total_cost * 0.1 ? 'high-cost' : item.total_cost > reportData.total_cost * 0.05 ? 'medium-cost' : 'low-cost'}\">${item.total_cost.toLocaleString()}</td>\n                            <td>${item.confidence}%</td>\n                        </tr>\n                    `;\n                }).join('')}\n            </tbody>\n        </table>\n        \n        <div style=\"margin-top: 30px; padding: 20px; background: #ecf0f1; border-radius: 8px;\">\n            <h3>📝 Notes</h3>\n            <ul>\n                <li>Costs are estimated using current market prices for ${reportData.country}</li>\n                <li>Confidence levels indicate reliability of cost estimates</li>\n                <li>High-cost elements (>10% of total) should be reviewed carefully</li>\n                <li>This is an automated estimation - professional review recommended</li>\n            </ul>\n        </div>\n    </div>\n</body>\n</html>`;\n\nreturn [{\n  json: reportData,\n  binary: {\n    data: {\n      data: Buffer.from(htmlContent).toString('base64'),\n      mimeType: 'text/html',\n      fileName: 'cost_estimation_report.html'\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 300],
+      "id": "prepare-html-binary",
+      "name": "Prepare HTML Binary Data"
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $json.report_path }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [2400, 300],
+      "id": "save-html-report",
+      "name": "Save HTML Report"
+    },
+    {
+      "parameters": {
+        "command": "=echo ✅ Construction Cost Estimation Complete! & echo 📊 Total Cost: {{ $json.currency }} {{ $json.total_cost.toLocaleString() }} & echo 📁 Report saved to: {{ $json.report_path }} & echo 🏗️ Elements analyzed: {{ $json.total_elements }} & echo 📈 Average confidence: {{ $json.avg_confidence.toFixed(1) }}% & echo. & echo 🎯 Next steps: & echo   1. Review the HTML report & echo   2. Check high-cost elements & echo   3. Validate estimates with local contractors & echo. & echo ✅ Workflow completed successfully!"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [2600, 300],
+      "id": "completion-message",
+      "name": "Show Completion Message"
+    }
+  ],
+  "connections": {
+    "Start Workflow": {
+      "main": [
+        [
+          {
+            "node": "Setup Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Parameters": {
+      "main": [
+        [
+          {
+            "node": "Convert IFC to Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert IFC to Excel": {
+      "main": [
+        [
+          {
+            "node": "Read Excel File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Excel File": {
+      "main": [
+        [
+          {
+            "node": "Parse Excel Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Excel Data": {
+      "main": [
+        [
+          {
+            "node": "Group Elements for Cost Estimation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group Elements for Cost Estimation": {
+      "main": [
+        [
+          {
+            "node": "AI Cost Estimation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Cost Estimation": {
+      "main": [
+        [
+          {
+            "node": "Process Cost Estimation Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Cost Estimation Results": {
+      "main": [
+        [
+          {
+            "node": "Generate Cost Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Cost Report": {
+      "main": [
+        [
+          {
+            "node": "Prepare HTML Binary Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare HTML Binary Data": {
+      "main": [
+        [
+          {
+            "node": "Save HTML Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save HTML Report": {
+      "main": [
+        [
+          {
+            "node": "Show Completion Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "instanceId": "fixed-workflow"
+  },
+  "id": "FixedConstructionPriceEstimation",
+  "tags": []
+}

@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "total_files": 319,
+    "dwg_files": 77,
+    "pdf_files": 242,
+    "total_size_mb": 28.67,
+    "processing_date": "2025-09-23T01:03:46.891750"
+  },
+  "file_breakdown": {
+    "by_type": {
+      "DWG": 77,
+      "PDF": 242
+    },
+    "by_folder": {
+      "Project": 1,
+      "Archive_1": 26,
+      "__MACOSX": 159,
+      "Archive_2": 11,
+      "Archive_3": 28,
+      "Archive": 65,
+      "Archive_5": 29
+    },
+    "by_priority": {
+      "Medium": 243,
+      "High": 76
+    }
+  },
+  "output_files": {
+    "csv_data_folder": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\Project\\Excel_Output\\CSV_Data",
+    "files_created": [
+      "File_Inventory.csv",
+      "Project_Summary.csv",
+      "Processing_Plan.csv",
+      "Construction_Categories.csv",
+      "Data_Requirements.csv"
+    ]
+  }
+}

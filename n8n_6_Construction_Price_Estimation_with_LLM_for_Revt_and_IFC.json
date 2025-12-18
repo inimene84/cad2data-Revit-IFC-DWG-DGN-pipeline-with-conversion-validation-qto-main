@@ -63,42 +63,20 @@
     },
     {
       "parameters": {
-        "modelId": {
-          "__rl": true,
-          "value": "chatgpt-4o-latest",
-          "mode": "list",
-          "cachedResultName": "CHATGPT-4O-LATEST"
-        },
-        "messages": {
-          "values": [
-            {
-              "content": "You are an expert in Revit, BIM (Building Information Modeling) and construction classification. Your task is to classify category values as either building elements or non-building elements (drawings, annotations, etc.).\n\nBuilding elements include:\n- Structural elements (walls, floors, roofs, columns, beams, foundations, slabs)\n- MEP elements (pipes, ducts, equipment, fixtures, mechanical equipment)\n- Architectural elements (doors, windows, stairs, railings, curtain walls)\n- Site elements (parking, roads, landscaping)\n- Furniture and fixtures\n- Any physical construction element that has volume, area, or physical properties\n\nNon-building elements include:\n- Drawings and sheets\n- Annotations, dimensions, text notes\n- Views, sections, elevations, plans\n- Tags, symbols, legends, schedules\n- Grids, levels, reference planes\n- Revision clouds, callouts, detail items\n- Lines, filled regions, detail lines\n- Any 2D documentation or annotation element\n\nIMPORTANT: Analyze the actual category name, not just keywords. For example:\n- \"Detail Items\" = non-building (annotation)\n- \"Plumbing Fixtures\" = building element\n- \"Room Tags\" = non-building (annotation)\n- \"Structural Columns\" = building element\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"classifications\": {\n    \"category_value_1\": true,\n    \"category_value_2\": false\n  },\n  \"building_categories\": [\"list\", \"of\", \"building\", \"categories\"],\n  \"drawing_categories\": [\"list\", \"of\", \"drawing\", \"categories\"]\n}",
-              "role": "system"
-            },
-            {
-              "content": "{{ $json.categoryField ? `Classify these ${$json.categoryValues.length} category values from field '${$json.categoryField}' as building elements (true) or drawings/annotations (false):\n\nCategory values:\n${JSON.stringify($json.categoryValues, null, 2)}\n\nCategory field type: ${$json.categoryFieldType}` : 'No category field found. Please classify based on volumetric data presence.'}}"
-            }
-          ]
-        },
+        "promptType": "define",
+        "text": "={{ $json.categoryField ? `Classify these ${$json.categoryValues.length} category values from field '${$json.categoryField}' as building elements (true) or drawings/annotations (false):\n\nCategory values:\n${JSON.stringify($json.categoryValues, null, 2)}\n\nCategory field type: ${$json.categoryFieldType}` : 'No category field found. Please classify based on volumetric data presence.'}}",
         "options": {
-          "maxTokens": 4000,
-          "temperature": 0.1
+          "systemMessage": "You are an expert in Revit, BIM (Building Information Modeling) and construction classification. Your task is to classify category values as either building elements or non-building elements (drawings, annotations, etc.).\n\nBuilding elements include:\n- Structural elements (walls, floors, roofs, columns, beams, foundations, slabs)\n- MEP elements (pipes, ducts, equipment, fixtures, mechanical equipment)\n- Architectural elements (doors, windows, stairs, railings, curtain walls)\n- Site elements (parking, roads, landscaping)\n- Furniture and fixtures\n- Any physical construction element that has volume, area, or physical properties\n\nNon-building elements include:\n- Drawings and sheets\n- Annotations, dimensions, text notes\n- Views, sections, elevations, plans\n- Tags, symbols, legends, schedules\n- Grids, levels, reference planes\n- Revision clouds, callouts, detail items\n- Lines, filled regions, detail lines\n- Any 2D documentation or annotation element\n\nIMPORTANT: Analyze the actual category name, not just keywords. For example:\n- \"Detail Items\" = non-building (annotation)\n- \"Plumbing Fixtures\" = building element\n- \"Room Tags\" = non-building (annotation)\n- \"Structural Columns\" = building element\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"classifications\": {\n    \"category_value_1\": true,\n    \"category_value_2\": false\n  },\n  \"building_categories\": [\"list\", \"of\", \"building\", \"categories\"],\n  \"drawing_categories\": [\"list\", \"of\", \"drawing\", \"categories\"]\n}"
         }
       },
       "id": "25eda6cf-482c-4fd5-bdb0-0fc486a63495",
       "name": "AI Classify Categories1",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.3,
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
       "position": [
         960,
         1240
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "5SwKOx6OOukR6C0w",
-          "name": "OpenAi account n8n"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -401,41 +379,20 @@
     },
     {
       "parameters": {
-        "modelId": {
-          "__rl": true,
-          "value": "chatgpt-4o-latest",
-          "mode": "list",
-          "cachedResultName": "CHATGPT-4O-LATEST"
-        },
-        "messages": {
-          "values": [
-            {
-              "content": "You are an expert in construction classification systems. Analyze building element groups and assign aggregation methods for grouping data.\n\nRules:\n1. 'sum' - for quantities that should be totaled:\n   - Volume, Area, Length, Width, Height, Depth, Size\n   - Count, Quantity, Number, Amount, Total\n   - Thickness, Perimeter, Dimension\n   - Weight, Mass, Load\n   - Any measurable physical property that accumulates\n\n2. 'mean' (average) - for rates and unit values:\n   - Price, Cost, Rate (per unit)\n   - Coefficient, Factor, Ratio\n   - Percentage, Percent\n   - Efficiency, Performance metrics\n   - Any per-unit or normalized values\n\n3. 'first' - for descriptive/categorical data:\n   - ID, Code, Number (when used as identifier)\n   - Name, Title, Description\n   - Type, Category, Class, Group\n   - Material, Component, Element\n   - Project, Building, Location\n   - Status, Phase, Stage\n   - Any text or categorical field\n\nIMPORTANT: \n- Analyze each header carefully\n- Consider both the header name AND sample value\n- Return aggregation rule for EVERY header provided\n- Use exact header names from input\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"aggregation_rules\": {\n    \"Header1\": \"sum\",\n    \"Header2\": \"first\",\n    \"Header3\": \"mean\"\n  }\n}",
-              "role": "system"
-            },
-            {
-              "content": "Analyze these {{ $json.totalHeaders }} headers and determine aggregation method for each:\n\nHeaders with sample values:\n{{ JSON.stringify($json.sampleValues, null, 2) }}\n\nProvide aggregation rule for EACH header listed above."
-            }
-          ]
-        },
+        "promptType": "define",
+        "text": "Analyze these {{ $json.totalHeaders }} headers and determine aggregation method for each:\n\nHeaders with sample values:\n{{ JSON.stringify($json.sampleValues, null, 2) }}\n\nProvide aggregation rule for EACH header listed above.",
         "options": {
-          "temperature": 0.1
+          "systemMessage": "You are an expert in construction classification systems. Analyze building element groups and assign aggregation methods for grouping data.\n\nRules:\n1. 'sum' - for quantities that should be totaled:\n   - Volume, Area, Length, Width, Height, Depth, Size\n   - Count, Quantity, Number, Amount, Total\n   - Thickness, Perimeter, Dimension\n   - Weight, Mass, Load\n   - Any measurable physical property that accumulates\n\n2. 'mean' (average) - for rates and unit values:\n   - Price, Cost, Rate (per unit)\n   - Coefficient, Factor, Ratio\n   - Percentage, Percent\n   - Efficiency, Performance metrics\n   - Any per-unit or normalized values\n\n3. 'first' - for descriptive/categorical data:\n   - ID, Code, Number (when used as identifier)\n   - Name, Title, Description\n   - Type, Category, Class, Group\n   - Material, Component, Element\n   - Project, Building, Location\n   - Status, Phase, Stage\n   - Any text or categorical field\n\nIMPORTANT: \n- Analyze each header carefully\n- Consider both the header name AND sample value\n- Return aggregation rule for EVERY header provided\n- Use exact header names from input\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"aggregation_rules\": {\n    \"Header1\": \"sum\",\n    \"Header2\": \"first\",\n    \"Header3\": \"mean\"\n  }\n}"
         }
       },
       "id": "7158c188-8c66-4e91-aa28-a921b952331b",
       "name": "AI Analyze All Headers",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.3,
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
       "position": [
         1160,
         960
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "5SwKOx6OOukR6C0w",
-          "name": "OpenAi account n8n"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -901,13 +858,13 @@
             {
               "id": "9cbd4ec9-df24-41e8-b47a-720a4cdb733b",
               "name": "path_to_converter",
-              "value": "C:\\Users\\Artem Boiko\\Documents\\GitHub\\DDC-Converters\\DDC_Converter_IFC\\IfcExporter.exe",
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\DDC_Converter_IFC\\datadrivenlibs\\IfcExporter.exe",
               "type": "string"
             },
             {
               "id": "aa834467-80fb-476a-bac1-6728478834f0",
               "name": "project_file",
-              "value": "C:\\Users\\Artem Boiko\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto\\Sample_Projects\\Ifc2x3_Parking_sample.ifc",
+              "value": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\Sample_Projects\\Ifc2x3_Parking_sample.ifc",
               "type": "string"
             },
             {
@@ -1125,6 +1082,20 @@
         1460
       ],
       "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "modelName": "={{ \"models/gemini-2.5-pro\" }}",
+        "options": {}
+      },
+      "id": "4a75aa1e-748e-434b-b096-24d86c263bd6",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        1400
+      ]
     }
   ],
   "pinData": {},
@@ -1168,6 +1139,27 @@
           {
             "node": "Apply Classification to Groups1",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Classify Categories1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Analyze All Headers",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent Enhanced",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]

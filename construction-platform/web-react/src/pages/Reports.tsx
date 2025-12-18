@@ -316,7 +316,7 @@ const Reports = () => {
                   onChange={(e) => setFormData({ ...formData, include_vat: e.target.checked })}
                 />
               }
-              label="Include VAT (22%)"
+              label="Include VAT (24%)"
             />
           </Box>
         </DialogContent>

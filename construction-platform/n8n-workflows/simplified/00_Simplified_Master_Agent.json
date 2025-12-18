@@ -1,0 +1,287 @@
+{
+  "name": "🏗️ Simplified Construction AI Platform - Master Agent v2.0",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "id": "manual-trigger-001",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "construction-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "id": "webhook-trigger-001",
+      "name": "Webhook Trigger",
+      "webhookId": "simplified-construction-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        540,
+        300
+      ],
+      "id": "merge-inputs-001",
+      "name": "Merge Inputs"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Simplified Input Validator (Upgraded v2.0)\n// Validates input parameters before processing with project context support\n\nconst input = $input.first().json;\nconst body = input.body || input;\nconst errors = [];\n\n// Extract project context (NEW)\nconst projectId = body.projectId || body.project?.id || null;\nconst projectName = body.projectName || body.project?.name || null;\nconst projectPhase = body.projectPhase || body.project?.phase || 'general';\nconst userId = body.userId || body.user?.id || null;\nconst tenantId = body.tenantId || body.tenant?.id || null;\n\n// Required fields (can be customized per workflow)\nconst requiredFields = body.requiredFields || [];\n\n// Check required fields\nfor (const field of requiredFields) {\n    if (!body[field] && body[field] !== 0 && body[field] !== false) {\n        errors.push(`Missing required field: ${field}`);\n    }\n}\n\n// Validate file extensions\nif (body.fileExtension) {\n    const validExtensions = ['.rvt', '.ifc', '.dwg', '.dgn', '.pdf', '.jpg', '.png', '.docx', '.xlsx', '.csv'];\n    const ext = body.fileExtension.toLowerCase();\n    if (!validExtensions.includes(ext)) {\n        errors.push(`Invalid file extension: ${ext}. Valid extensions: ${validExtensions.join(', ')}`);\n    }\n}\n\n// Validate request type\nif (body.requestType) {\n    const validTypes = ['convert', 'validate', 'classify', 'estimate_cost', 'carbon_footprint', 'quantity_takeoff', 'extract_data', 'materials', 'generate_document', 'file_management', 'vendor', 'compliance', 'visualization', 'bim', 'scheduling', '3d_vision'];\n    if (!validTypes.includes(body.requestType)) {\n        errors.push(`Invalid request type: ${body.requestType}. Valid types: ${validTypes.join(', ')}`);\n    }\n}\n\nif (errors.length > 0) {\n    return [{\n        json: {\n            valid: false,\n            errors: errors,\n            input: body\n        }\n    }];\n}\n\nreturn [{\n    json: {\n        valid: true,\n        input: body,\n        // Project context (NEW)\n        project: {\n            id: projectId,\n            name: projectName,\n            phase: projectPhase\n        },\n        user: {\n            id: userId\n        },\n        tenant: {\n            id: tenantId\n        },\n        metadata: {\n            hasProjectContext: !!(projectId && projectName),\n            validationVersion: '2.0.0'\n        }\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ],
+      "id": "input-validator-001",
+      "name": "Input Validator"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.valid }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        300
+      ],
+      "id": "validation-check-001",
+      "name": "Input Valid?"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Simplified Router\n// Simple routing based on request type\n\nconst input = $input.first().json.input;\nconst requestType = input.requestType || input.type || 'convert';\nconst fileExtension = input.fileExtension || input.file?.extension || '';\n\n// Simple routing - just return the request type\nreturn [{\n    json: {\n        route: requestType,\n        requestType: requestType,\n        fileExtension: fileExtension,\n        originalInput: input,\n        timestamp: new Date().toISOString()\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ],
+      "id": "simplified-router-001",
+      "name": "Simplified Router"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "AGENT_WORKFLOW_ID",
+          "mode": "list"
+        },
+        "source": "workflow",
+        "options": {
+          "continueOnFail": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1740,
+        300
+      ],
+      "id": "execute-workflow-001",
+      "name": "Execute Agent Workflow",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Simplified Error Handler\n// Centralized error handling for all workflows\n\nconst input = $input.first().json;\nconst error = input.error || input;\nconst context = input.context || {};\n\n// Error handler class\nclass ErrorHandler {\n    handleError(error, context = {}) {\n        const errorType = this.getErrorType(error);\n        const errorMessage = this.getErrorMessage(error);\n        \n        return {\n            success: false,\n            error: {\n                message: errorMessage,\n                type: errorType,\n                code: error.code || error.statusCode || 'UNKNOWN_ERROR',\n                timestamp: new Date().toISOString(),\n                executionId: context.executionId || $execution.id,\n                workflowName: context.workflowName || 'unknown',\n                context: context\n            },\n            recovery: {\n                suggestions: this.getRecoverySuggestions(errorType),\n                canRetry: this.canRetry(errorType),\n                retryAfter: this.getRetryAfter(errorType)\n            }\n        };\n    }\n    \n    getErrorType(error) {\n        if (error?.code === 'ENOTFOUND' || error?.code === 'ECONNREFUSED') return 'network_error';\n        if (error?.code === 'ETIMEDOUT') return 'timeout_error';\n        if (error?.statusCode >= 400 && error?.statusCode < 500) return 'client_error';\n        if (error?.statusCode >= 500) return 'server_error';\n        if (error?.message?.includes('not found')) return 'not_found';\n        if (error?.message?.includes('unauthorized') || error?.message?.includes('forbidden')) return 'authentication_error';\n        if (error?.message?.includes('validation') || error?.message?.includes('invalid')) return 'validation_error';\n        return 'unknown_error';\n    }\n    \n    getErrorMessage(error) {\n        if (typeof error === 'string') return error;\n        return error?.message || error?.error?.message || 'An unexpected error occurred';\n    }\n    \n    getRecoverySuggestions(errorType) {\n        const suggestions = {\n            network_error: ['Check your internet connection', 'Verify the service is available', 'Try again in a few moments'],\n            timeout_error: ['The request took too long', 'Try again with a smaller file', 'Check if the service is overloaded'],\n            client_error: ['Check your input parameters', 'Verify file format and size', 'Ensure all required fields are provided'],\n            server_error: ['Service temporarily unavailable', 'Try again later', 'Contact support if problem persists'],\n            not_found: ['Check if the file/resource exists', 'Verify the file ID or path', 'Ensure you have access permissions'],\n            authentication_error: ['Check your API credentials', 'Verify authentication tokens', 'Ensure your account has necessary permissions'],\n            validation_error: ['Check input format', 'Verify required fields', 'Ensure data types are correct'],\n            unknown_error: ['Try again', 'Check logs for details', 'Contact support if problem persists']\n        };\n        return suggestions[errorType] || suggestions.unknown_error;\n    }\n    \n    canRetry(errorType) {\n        return ['network_error', 'timeout_error', 'server_error'].includes(errorType);\n    }\n    \n    getRetryAfter(errorType) {\n        const delays = { network_error: 5, timeout_error: 10, server_error: 30, default: 60 };\n        return delays[errorType] || delays.default;\n    }\n}\n\nconst handler = new ErrorHandler();\nconst errorResponse = handler.handleError(error, context);\n\nreturn [{ json: errorResponse }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        500
+      ],
+      "id": "error-handler-001",
+      "name": "Error Handler"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        300
+      ],
+      "id": "success-response-001",
+      "name": "Success Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        500
+      ],
+      "id": "error-response-001",
+      "name": "Error Response"
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Inputs": {
+      "main": [
+        [
+          {
+            "node": "Input Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validator": {
+      "main": [
+        [
+          {
+            "node": "Input Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Valid?": {
+      "main": [
+        [
+          {
+            "node": "Simplified Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simplified Router": {
+      "main": [
+        [
+          {
+            "node": "Execute Agent Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Agent Workflow": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": false,
+    "timezone": "Europe/Tallinn",
+    "errorWorkflow": "ERROR_HANDLER_WORKFLOW_ID"
+  },
+  "tags": [
+    {
+      "id": "simplified",
+      "name": "simplified"
+    },
+    {
+      "id": "master",
+      "name": "master"
+    },
+    {
+      "id": "construction",
+      "name": "construction"
+    }
+  ],
+  "versionId": "2.0.0"
+}

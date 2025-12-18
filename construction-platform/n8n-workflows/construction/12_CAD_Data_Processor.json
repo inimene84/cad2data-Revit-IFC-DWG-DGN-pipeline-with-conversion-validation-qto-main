@@ -1,0 +1,108 @@
+{
+  "name": "🏗️ CAD Data Processor - BIM Geometry Analysis",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [120, 200],
+      "id": "cad-trigger-001",
+      "name": "📥 Called by Manager"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "={{ $json.fileId }}"
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [320, 200],
+      "id": "cad-download-002",
+      "name": "📂 Download CSV from Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GOOGLE_DRIVE_OAUTH_CONSTRUCTION",
+          "name": "Google Drive Construction"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileFormat": "csv",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [520, 200],
+      "id": "cad-parse-003",
+      "name": "📊 Parse CSV Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// CAD Geometry Data Processor for Estonian Construction\n// Processes extracted CAD data (arcs, circles, lines, polylines, hatches)\n// Calculates quantities and categorizes by material type\n\nconst items = $input.all();\nconst fileName = $('📥 Called by Manager').item.json.fileName || 'CAD_Data';\nconst fileType = fileName.toLowerCase().includes('arc') ? 'arcs' : \n                 fileName.toLowerCase().includes('circle') ? 'circles' :\n                 fileName.toLowerCase().includes('line') ? 'lines' :\n                 fileName.toLowerCase().includes('poly') ? 'polylines' :\n                 fileName.toLowerCase().includes('hatch') ? 'hatches' :\n                 fileName.toLowerCase().includes('text') ? 'text' : 'geometry';\n\n// Material categorization based on layer names (Estonian construction)\nfunction categorizeMaterial(layerName) {\n  const layer = (layerName || '').toUpperCase();\n  \n  if (layer.includes('PUU') || layer.includes('WOOD') || layer.includes('TIMBER')) {\n    return { category: 'Timber/Wood Framing', unit: 'm', estPricePerUnit: 25, material: 'Puit' };\n  }\n  if (layer.includes('BETO') || layer.includes('CONC') || layer.includes('CONCRETE')) {\n    return { category: 'Concrete', unit: 'm³', estPricePerUnit: 120, material: 'Betoon' };\n  }\n  if (layer.includes('TERAS') || layer.includes('STEEL') || layer.includes('RAUD')) {\n    return { category: 'Steel/Reinforcement', unit: 'kg', estPricePerUnit: 1.5, material: 'Teras' };\n  }\n  if (layer.includes('SEIN') || layer.includes('WALL') || layer.includes('MÜÜR')) {\n    return { category: 'Wall Construction', unit: 'm²', estPricePerUnit: 85, material: 'Seinad' };\n  }\n  if (layer.includes('KATUS') || layer.includes('ROOF')) {\n    return { category: 'Roofing', unit: 'm²', estPricePerUnit: 45, material: 'Katus' };\n  }\n  if (layer.includes('PÕRAND') || layer.includes('FLOOR') || layer.includes('SLAB')) {\n    return { category: 'Flooring/Slab', unit: 'm²', estPricePerUnit: 65, material: 'Põrand' };\n  }\n  if (layer.includes('AKN') || layer.includes('WINDOW') || layer.includes('UKS') || layer.includes('DOOR')) {\n    return { category: 'Windows/Doors', unit: 'pcs', estPricePerUnit: 350, material: 'Aknad/Uksed' };\n  }\n  \n  return { category: 'Other/Unclassified', unit: 'm', estPricePerUnit: 0, material: 'Muu' };\n}\n\n// Process geometry data\nconst materialQuantities = {};\nconst geometryStats = {\n  totalElements: items.length,\n  totalArea: 0,\n  totalLength: 0,\n  byLayer: {},\n  byMaterial: {}\n};\n\nitems.forEach(item => {\n  const data = item.json;\n  const layer = data.Layer || 'Unknown';\n  const area = parseFloat(data.Area || 0);\n  const length = parseFloat(data.Length || 0);\n  const radius = parseFloat(data.Radius || 0);\n  \n  // Update totals\n  geometryStats.totalArea += area;\n  geometryStats.totalLength += length;\n  \n  // Group by layer\n  if (!geometryStats.byLayer[layer]) {\n    geometryStats.byLayer[layer] = {\n      count: 0,\n      totalArea: 0,\n      totalLength: 0,\n      elements: []\n    };\n  }\n  \n  geometryStats.byLayer[layer].count++;\n  geometryStats.byLayer[layer].totalArea += area;\n  geometryStats.byLayer[layer].totalLength += length;\n  geometryStats.byLayer[layer].elements.push({\n    id: data.ID,\n    type: fileType,\n    area: area,\n    length: length\n  });\n  \n  // Categorize by material\n  const materialInfo = categorizeMaterial(layer);\n  const materialKey = materialInfo.category;\n  \n  if (!materialQuantities[materialKey]) {\n    materialQuantities[materialKey] = {\n      material: materialInfo.material,\n      category: materialInfo.category,\n      unit: materialInfo.unit,\n      quantity: 0,\n      estPricePerUnit: materialInfo.estPricePerUnit,\n      layers: [],\n      elements: 0\n    };\n  }\n  \n  materialQuantities[materialKey].quantity += (area > 0 ? area : length);\n  materialQuantities[materialKey].elements++;\n  if (!materialQuantities[materialKey].layers.includes(layer)) {\n    materialQuantities[materialKey].layers.push(layer);\n  }\n});\n\n// Convert to array and calculate costs\nconst materialsArray = Object.values(materialQuantities).map(m => ({\n  ...m,\n  quantity: parseFloat(m.quantity.toFixed(2)),\n  estimatedCost: parseFloat((m.quantity * m.estPricePerUnit).toFixed(2)),\n  layers: m.layers.join(', ')\n}));\n\n// Calculate totals\nconst totalEstimatedCost = materialsArray.reduce((sum, m) => sum + m.estimatedCost, 0);\n\n// Generate summary report\nconst summary = {\n  fileName: fileName,\n  fileType: fileType,\n  processedAt: new Date().toISOString(),\n  geometryStats: {\n    totalElements: geometryStats.totalElements,\n    totalArea: parseFloat(geometryStats.totalArea.toFixed(2)),\n    totalLength: parseFloat(geometryStats.totalLength.toFixed(2)),\n    uniqueLayers: Object.keys(geometryStats.byLayer).length\n  },\n  materials: materialsArray,\n  costSummary: {\n    totalEstimatedCost: parseFloat(totalEstimatedCost.toFixed(2)),\n    currency: 'EUR',\n    vatIncluded: true,\n    priceYear: 2025,\n    market: 'Estonia'\n  },\n  layerBreakdown: Object.keys(geometryStats.byLayer).map(layer => ({\n    layer: layer,\n    elements: geometryStats.byLayer[layer].count,\n    area: parseFloat(geometryStats.byLayer[layer].totalArea.toFixed(2)),\n    length: parseFloat(geometryStats.byLayer[layer].totalLength.toFixed(2)),\n    material: categorizeMaterial(layer).category\n  }))\n};\n\n// Format output message\nconst outputMessage = `🏗️ **CAD Data Analysis Complete**\\n\\n📊 **Geometry Summary:**\\n• Total Elements: ${summary.geometryStats.totalElements}\\n• Total Area: ${summary.geometryStats.totalArea} m²\\n• Total Length: ${summary.geometryStats.totalLength} m\\n• Unique Layers: ${summary.geometryStats.uniqueLayers}\\n\\n💰 **Materials Identified:**\\n${materialsArray.map(m => `• ${m.category}: ${m.quantity} ${m.unit} (~€${m.estimatedCost})`).join('\\n')}\\n\\n💵 **Total Estimated Cost:** €${totalEstimatedCost.toFixed(2)} EUR (incl. VAT)\\n\\n📋 **Layer Breakdown:**\\n${summary.layerBreakdown.map(l => `• ${l.layer}: ${l.elements} elements (${l.material})`).join('\\n')}\\n\\n✅ Ready for Bill of Quantities generation`;\n\nreturn [{\n  json: {\n    success: true,\n    summary: summary,\n    materials: materialsArray,\n    message: outputMessage,\n    readyForBOQ: true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 200],
+      "id": "cad-process-004",
+      "name": "🧮 Calculate Quantities & Costs"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "result",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            },
+            {
+              "name": "materials",
+              "value": "={{ JSON.stringify($json.materials) }}",
+              "type": "string"
+            },
+            {
+              "name": "totalCost",
+              "value": "={{ $json.summary.costSummary.totalEstimatedCost }}",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [920, 200],
+      "id": "cad-output-005",
+      "name": "📤 Return Results"
+    }
+  ],
+  "connections": {
+    "📥 Called by Manager": {
+      "main": [[{"node": "📂 Download CSV from Drive", "type": "main", "index": 0}]]
+    },
+    "📂 Download CSV from Drive": {
+      "main": [[{"node": "📊 Parse CSV Data", "type": "main", "index": 0}]]
+    },
+    "📊 Parse CSV Data": {
+      "main": [[{"node": "🧮 Calculate Quantities & Costs", "type": "main", "index": 0}]]
+    },
+    "🧮 Calculate Quantities & Costs": {
+      "main": [[{"node": "📤 Return Results", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {"name": "construction"},
+    {"name": "bim"},
+    {"name": "cad"}
+  ],
+  "version": "1.0.0",
+  "description": "Process CAD extracted data (CSV) and calculate material quantities and costs"
+}
+

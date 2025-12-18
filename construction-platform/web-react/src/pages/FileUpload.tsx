@@ -60,10 +60,23 @@ const FileUpload = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [projectName, setProjectName] = useState('');
   const [workflowType, setWorkflowType] = useState('auto');
+  const [country, setCountry] = useState('EE');
   const [processing, setProcessing] = useState(false);
+  const [estimating, setEstimating] = useState(false);
+  const [costEstimate, setCostEstimate] = useState<any>(null);
   const { enqueueSnackbar } = useSnackbar();
 
-  const steps = ['Select Files', 'Configure Processing', 'Process & Review'];
+  const steps = ['Select Files', 'Configure Processing', 'Process & Estimate'];
+
+  const countries = [
+    { code: 'EE', name: 'Estonia', vat: 24 },
+    { code: 'FI', name: 'Finland', vat: 25.5 },
+    { code: 'DE', name: 'Germany', vat: 19 },
+    { code: 'LV', name: 'Latvia', vat: 21 },
+    { code: 'LT', name: 'Lithuania', vat: 21 },
+    { code: 'PL', name: 'Poland', vat: 23 },
+    { code: 'SE', name: 'Sweden', vat: 25 },
+  ];
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map(file => ({
@@ -163,19 +176,76 @@ const FileUpload = () => {
     }
   };
 
+  // Run DDC cost estimation on extracted materials
+  const runCostEstimation = async (materials: any[]) => {
+    setEstimating(true);
+    try {
+      const response = await api.post('/v1/vector/estimate', {
+        materials: materials.map(m => ({
+          name: m.name || m.description || m.material,
+          quantity: parseFloat(m.quantity) || 1,
+          unit: m.unit || 'unit',
+          category: m.category
+        })),
+        language: 'en',
+        country: country
+      });
+
+      setCostEstimate(response.data);
+
+      // Auto-save to reports
+      try {
+        await api.post('/v1/reports', {
+          name: `${projectName || 'Unnamed Project'} - Cost Estimate`,
+          total_cost: response.data.total_gross,
+          items_count: response.data.items_count,
+          data: response.data
+        });
+        enqueueSnackbar('Cost estimate saved to reports', { variant: 'success' });
+      } catch (e) {
+        console.error('Failed to save report:', e);
+      }
+
+      enqueueSnackbar(`Cost estimation complete: €${response.data.total_gross?.toLocaleString()}`, { variant: 'success' });
+    } catch (error: any) {
+      console.error('Cost estimation error:', error);
+      enqueueSnackbar('Cost estimation failed', { variant: 'error' });
+    }
+    setEstimating(false);
+  };
+
   const processAllFiles = async () => {
     setProcessing(true);
     const pendingFiles = files.filter(f => f.status === 'pending');
-    
+
     // Process files in parallel (max 3 at a time)
     const batchSize = 3;
     for (let i = 0; i < pendingFiles.length; i += batchSize) {
       const batch = pendingFiles.slice(i, i + batchSize);
       await Promise.all(batch.map(processFile));
     }
-    
+
     setProcessing(false);
     setActiveStep(2);
+
+    // Collect all materials from completed files and run estimation
+    const completedFiles = files.filter(f => f.status === 'completed');
+    const allMaterials: any[] = [];
+    completedFiles.forEach(f => {
+      if (f.result?.materials) {
+        allMaterials.push(...f.result.materials);
+      } else if (f.result?.extracted_data) {
+        // Handle different response formats
+        const data = f.result.extracted_data;
+        if (Array.isArray(data)) {
+          allMaterials.push(...data);
+        }
+      }
+    });
+
+    if (allMaterials.length > 0) {
+      await runCostEstimation(allMaterials);
+    }
   };
 
   const getStatusIcon = (status: UploadedFile['status']) => {
@@ -375,7 +445,7 @@ const FileUpload = () => {
                 <Typography variant="h6" gutterBottom>
                   Processing Configuration
                 </Typography>
-                
+
                 <Box sx={{ mt: 3 }}>
                   <TextField
                     fullWidth
@@ -385,7 +455,7 @@ const FileUpload = () => {
                     placeholder="Enter project name"
                     sx={{ mb: 3 }}
                   />
-                  
+
                   <FormControl fullWidth sx={{ mb: 3 }}>
                     <InputLabel>Workflow Type</InputLabel>
                     <Select
@@ -401,11 +471,26 @@ const FileUpload = () => {
                       <MenuItem value="3d">3D Visualization</MenuItem>
                     </Select>
                   </FormControl>
-                  
+
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Country (VAT)</InputLabel>
+                    <Select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      label="Country (VAT)"
+                    >
+                      {countries.map(c => (
+                        <MenuItem key={c.code} value={c.code}>
+                          {c.name} ({c.vat}% VAT)
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
                   <Alert severity="info" sx={{ mb: 2 }}>
-                    {files.length} file(s) will be processed using {workflowType === 'auto' ? 'automatic detection' : workflowType}
+                    {files.length} file(s) will be processed with DDC CWICR cost estimation ({countries.find(c => c.code === country)?.name} VAT)
                   </Alert>
-                  
+
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle2" fontWeight={600} gutterBottom>
                       Files to Process:
@@ -424,7 +509,7 @@ const FileUpload = () => {
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} md={4}>
             <Card>
               <CardContent>
@@ -471,7 +556,7 @@ const FileUpload = () => {
                 <Typography variant="h6" gutterBottom>
                   Processing Results
                 </Typography>
-                
+
                 {processing ? (
                   <Box sx={{ textAlign: 'center', py: 4 }}>
                     <CircularProgress size={60} />
@@ -498,11 +583,11 @@ const FileUpload = () => {
                         <ListItemText
                           primary={file.file.name}
                           secondary={
-                            file.status === 'completed' 
+                            file.status === 'completed'
                               ? `Successfully processed - ${file.result?.materials_found || 0} materials found`
                               : file.status === 'error'
-                              ? `Error: ${file.error}`
-                              : 'Processing...'
+                                ? `Error: ${file.error}`
+                                : 'Processing...'
                           }
                         />
                         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -522,11 +607,71 @@ const FileUpload = () => {
                     ))}
                   </List>
                 )}
-                
-                {!processing && files.some(f => f.status === 'completed') && (
+
+                {/* Cost Estimation Results */}
+                {estimating && (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <CircularProgress size={40} />
+                    <Typography variant="body1" sx={{ mt: 2 }}>
+                      Running DDC CWICR cost estimation...
+                    </Typography>
+                  </Box>
+                )}
+
+                {costEstimate && (
+                  <Box sx={{ mt: 3 }}>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="h6" gutterBottom color="primary">
+                      💰 Cost Estimation Results
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6} md={3}>
+                        <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'success.dark' }}>
+                          <Typography variant="h5" fontWeight="bold">
+                            €{costEstimate.total_gross?.toLocaleString()}
+                          </Typography>
+                          <Typography variant="caption">Total (incl. VAT)</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={6} md={3}>
+                        <Paper sx={{ p: 2, textAlign: 'center' }}>
+                          <Typography variant="h5">
+                            €{costEstimate.total_net?.toLocaleString()}
+                          </Typography>
+                          <Typography variant="caption">Net Cost</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={6} md={3}>
+                        <Paper sx={{ p: 2, textAlign: 'center' }}>
+                          <Typography variant="h5">
+                            {costEstimate.items_count}
+                          </Typography>
+                          <Typography variant="caption">Items Estimated</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={6} md={3}>
+                        <Paper sx={{ p: 2, textAlign: 'center' }}>
+                          <Typography variant="h5">
+                            {costEstimate.avg_confidence}%
+                          </Typography>
+                          <Typography variant="caption">Confidence</Typography>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                      Cost estimate saved to Reports! VAT Rate: {(costEstimate.vat_rate * 100)}% ({costEstimate.country})
+                    </Alert>
+                  </Box>
+                )}
+
+                {!processing && !estimating && files.some(f => f.status === 'completed') && (
                   <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                    <Button variant="contained" startIcon={<Send />}>
-                      Generate Report
+                    <Button
+                      variant="contained"
+                      startIcon={<Send />}
+                      onClick={() => window.location.href = '/reports'}
+                    >
+                      View Reports
                     </Button>
                     <Button variant="outlined" startIcon={<Download />}>
                       Download Results

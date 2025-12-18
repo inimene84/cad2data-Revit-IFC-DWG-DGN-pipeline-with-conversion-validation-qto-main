@@ -1,0 +1,277 @@
+{
+  "version": "2.0.0",
+  "created_at": "2025-01-15T00:00:00.000Z",
+  "updated_at": "2025-01-15T00:00:00.000Z",
+  "upgrade_version": "2.0.0",
+  "upgrade_date": "2025-01-15T00:00:00.000Z",
+  "upgrade_features": [
+    "Project context support",
+    "Enhanced error handling with project tracking",
+    "Multi-tenant support",
+    "User context tracking",
+    "Execution ID generation",
+    "Workflow version tracking"
+  ],
+  "workflows": {},
+  "agents": {
+    "cad_bim_conversion": {
+      "name": "Cad Bim Conversion",
+      "workflows": [
+        {
+          "name": "n8n_1_Revit_IFC_DWG_Conversation_simple",
+          "file": "n8n_1_Revit_IFC_DWG_Conversation_simple.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_1_Revit_IFC_DWG_Conversation_simple.json",
+          "id": "n8n_1_Revit_IFC_DWG_Conversation_simple",
+          "type": "cad_bim"
+        },
+        {
+          "name": "n8n_2_All_Settings_Revit_IFC_DWG_Conversation_simple",
+          "file": "n8n_2_All_Settings_Revit_IFC_DWG_Conversation_simple.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_2_All_Settings_Revit_IFC_DWG_Conversation_simple.json",
+          "id": "n8n_2_All_Settings_Revit_IFC_DWG_Conversation_simple",
+          "type": "cad_bim"
+        },
+        {
+          "name": "n8n_8_Revit_IFC_DWG_Conversation_EXTRACT_Phase_with_Parse_XLSX",
+          "file": "n8n_8_Revit_IFC_DWG_Conversation_EXTRACT_Phase_with_Parse_XLSX.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_8_Revit_IFC_DWG_Conversation_EXTRACT_Phase_with_Parse_XLSX.json",
+          "id": "n8n_8_Revit_IFC_DWG_Conversation_EXTRACT_Phase_with_Parse_XLSX",
+          "type": "cad_bim"
+        },
+        {
+          "name": "🔍 Data Extraction Agent - Advanced OCR & AI Construction Analysis",
+          "file": "02_Data_Extraction_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\02_Data_Extraction_Agent.json",
+          "id": "02_Data_Extraction_Agent",
+          "type": "construction"
+        },
+        {
+          "name": "🏗️ CAD Data Processor - BIM Geometry Analysis",
+          "file": "12_CAD_Data_Processor.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\12_CAD_Data_Processor.json",
+          "id": "12_CAD_Data_Processor",
+          "type": "construction"
+        }
+      ],
+      "count": 5
+    },
+    "cad_bim_validation": {
+      "name": "Cad Bim Validation",
+      "workflows": [
+        {
+          "name": "n8n_4_Validation_CAD_BIM_Revit_IFC_DWG",
+          "file": "n8n_4_Validation_CAD_BIM_Revit_IFC_DWG.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_4_Validation_CAD_BIM_Revit_IFC_DWG.json",
+          "id": "n8n_4_Validation_CAD_BIM_Revit_IFC_DWG",
+          "type": "cad_bim"
+        }
+      ],
+      "count": 1
+    },
+    "cad_bim_classification": {
+      "name": "Cad Bim Classification",
+      "workflows": [
+        {
+          "name": "n8n_5_CAD_BIM_Automatic_Classification_with_LLM_and_RAG",
+          "file": "n8n_5_CAD_BIM_Automatic_Classification_with_LLM_and_RAG.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_5_CAD_BIM_Automatic_Classification_with_LLM_and_RAG.json",
+          "id": "n8n_5_CAD_BIM_Automatic_Classification_with_LLM_and_RAG",
+          "type": "cad_bim"
+        }
+      ],
+      "count": 1
+    },
+    "cad_bim_cost_estimation": {
+      "name": "Cad Bim Cost Estimation",
+      "workflows": [
+        {
+          "name": "n8n_6_Construction_Price_Estimation_with_LLM_for_Revt_and_IFC",
+          "file": "n8n_6_Construction_Price_Estimation_with_LLM_for_Revt_and_IFC.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_6_Construction_Price_Estimation_with_LLM_for_Revt_and_IFC.json",
+          "id": "n8n_6_Construction_Price_Estimation_with_LLM_for_Revt_and_IFC",
+          "type": "cad_bim"
+        },
+        {
+          "name": "n8n_6_Fixed_Construction_Price_Estimation_OpenAI_Only",
+          "file": "n8n_6_Fixed_Construction_Price_Estimation_OpenAI_Only.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_6_Fixed_Construction_Price_Estimation_OpenAI_Only.json",
+          "id": "n8n_6_Fixed_Construction_Price_Estimation_OpenAI_Only",
+          "type": "cad_bim"
+        },
+        {
+          "name": "💰 Materials Accounting Agent - BOQ & Cost Estimation System",
+          "file": "03_Materials_Accounting_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\03_Materials_Accounting_Agent.json",
+          "id": "03_Materials_Accounting_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 3
+    },
+    "cad_bim_carbon_footprint": {
+      "name": "Cad Bim Carbon Footprint",
+      "workflows": [
+        {
+          "name": "n8n_7_Carbon_Footprint_CO2_Estimator_for_Revit and_IFC",
+          "file": "n8n_7_Carbon_Footprint_CO2_Estimator_for_Revit and_IFC.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_7_Carbon_Footprint_CO2_Estimator_for_Revit and_IFC.json",
+          "id": "n8n_7_Carbon_Footprint_CO2_Estimator_for_Revit and_IFC",
+          "type": "cad_bim"
+        }
+      ],
+      "count": 1
+    },
+    "cad_bim_quantity_takeoff": {
+      "name": "Cad Bim Quantity Takeoff",
+      "workflows": [
+        {
+          "name": "n8n_9_CAD_BIM_Quantity_TakeOff_HTML_Report_Generator",
+          "file": "n8n_9_CAD_BIM_Quantity_TakeOff_HTML_Report_Generator.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_9_CAD_BIM_Quantity_TakeOff_HTML_Report_Generator.json",
+          "id": "n8n_9_CAD_BIM_Quantity_TakeOff_HTML_Report_Generator",
+          "type": "cad_bim"
+        }
+      ],
+      "count": 1
+    },
+    "construction_documents": {
+      "name": "Construction Documents",
+      "workflows": [
+        {
+          "name": "📄 Document Generation Agent - Professional Reports",
+          "file": "05_Document_Generation_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\05_Document_Generation_Agent.json",
+          "id": "05_Document_Generation_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 1
+    },
+    "construction_file_management": {
+      "name": "Construction File Management",
+      "workflows": [
+        {
+          "name": "📁 File Manager Agent - Construction File Organization",
+          "file": "06_File_Manager_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\06_File_Manager_Agent.json",
+          "id": "06_File_Manager_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 1
+    },
+    "construction_vendor": {
+      "name": "Construction Vendor",
+      "workflows": [
+        {
+          "name": "🏪 Vendor Agent - Estonian Supplier Network",
+          "file": "07_Vendor_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\07_Vendor_Agent.json",
+          "id": "07_Vendor_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 1
+    },
+    "construction_compliance": {
+      "name": "Construction Compliance",
+      "workflows": [
+        {
+          "name": "✅ Compliance Agent - Estonian Building Codes",
+          "file": "08_Compliance_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\08_Compliance_Agent.json",
+          "id": "08_Compliance_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 1
+    },
+    "construction_visualization": {
+      "name": "Construction Visualization",
+      "workflows": [
+        {
+          "name": "📊 Visualization Agent - Construction Data Visualization",
+          "file": "09_Visualization_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\09_Visualization_Agent.json",
+          "id": "09_Visualization_Agent",
+          "type": "construction"
+        },
+        {
+          "name": "🎨 3D Vision Agent - Advanced Construction Visualization",
+          "file": "13_3D_Vision_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\13_3D_Vision_Agent.json",
+          "id": "13_3D_Vision_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 2
+    },
+    "construction_bim": {
+      "name": "Construction Bim",
+      "workflows": [
+        {
+          "name": "🏗️ BIM Agent - Advanced BIM Processing with DDC Integration",
+          "file": "10_BIM_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\10_BIM_Agent.json",
+          "id": "10_BIM_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 1
+    },
+    "construction_scheduling": {
+      "name": "Construction Scheduling",
+      "workflows": [
+        {
+          "name": "📅 Schedule Agent - Project Timeline Management",
+          "file": "11_Schedule_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\11_Schedule_Agent.json",
+          "id": "11_Schedule_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 1
+    },
+    "other": {
+      "name": "Other",
+      "workflows": [
+        {
+          "name": "n8n_3_CAD-BIM-Batch-Converter-Pipeline",
+          "file": "n8n_3_CAD-BIM-Batch-Converter-Pipeline.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_3_CAD-BIM-Batch-Converter-Pipeline.json",
+          "id": "n8n_3_CAD-BIM-Batch-Converter-Pipeline",
+          "type": "cad_bim"
+        },
+        {
+          "name": "Project Excel Pipeline - Data Driven Construction",
+          "file": "n8n_Project_Excel_Pipeline.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_Project_Excel_Pipeline.json",
+          "id": "n8n_Project_Excel_Pipeline",
+          "type": "cad_bim"
+        },
+        {
+          "name": "Real-Time Data Update Workflow",
+          "file": "n8n_Real_Time_Data_Update_Workflow.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\cad-bim\\n8n_Real_Time_Data_Update_Workflow.json",
+          "id": "n8n_Real_Time_Data_Update_Workflow",
+          "type": "cad_bim"
+        },
+        {
+          "name": "🏗️ Construction AI Manager Agent - Complete System",
+          "file": "01_Construction_Manager_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\01_Construction_Manager_Agent.json",
+          "id": "01_Construction_Manager_Agent",
+          "type": "construction"
+        },
+        {
+          "name": "🌐 Web Search Agent - Construction Market Intelligence",
+          "file": "04_Web_Search_Agent.json",
+          "path": "C:\\Users\\valgu\\Documents\\GitHub\\cad2data-Revit-IFC-DWG-DGN-pipeline-with-conversion-validation-qto-main\\construction-platform\\n8n-workflows\\construction\\04_Web_Search_Agent.json",
+          "id": "04_Web_Search_Agent",
+          "type": "construction"
+        }
+      ],
+      "count": 5
+    }
+  }
+}

@@ -1,0 +1,7 @@
+category,description,priority
+Structural,"Foundations, beams, columns, slabs",Critical
+Architectural,"Walls, doors, windows, finishes",High
+MEP,"Mechanical, electrical, plumbing",High
+Site,"Landscaping, utilities, paving",Medium
+Interior,"Furniture, fixtures, equipment",Medium
+Safety,"Fire safety, security, emergency",Critical

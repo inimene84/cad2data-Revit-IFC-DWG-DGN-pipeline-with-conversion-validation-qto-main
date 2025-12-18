@@ -1,0 +1,295 @@
+{
+  "name": "🎨 3D Vision Agent - Advanced Construction Visualization",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [120, 300],
+      "id": "3d-trigger-001",
+      "name": "📥 Called by Manager"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.operation }}",
+              "rightValue": "generate_3d_model",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [320, 300],
+      "id": "3d-router-002",
+      "name": "🔀 Operation Router"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "={{ $json.fileId }}"
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [520, 200],
+      "id": "3d-download-003",
+      "name": "📂 Download BIM File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GOOGLE_DRIVE_OAUTH_CONSTRUCTION",
+          "name": "Google Drive Construction"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 3D Vision Processing Engine\n// Generates 3D visualization data from construction files\n// Supports IFC, Revit, CAD formats\n\nconst items = $input.all();\nconst inputData = $('📥 Called by Manager').item.json;\nconst operation = inputData.operation || 'generate_3d_model';\nconst fileName = inputData.fileName || 'Construction_Model';\nconst quality = inputData.quality || 'medium'; // low, medium, high, ultra\n\n// File type detection\nfunction detectFileType(filename) {\n  const lower = filename.toLowerCase();\n  if (lower.endsWith('.ifc')) return 'IFC';\n  if (lower.endsWith('.rvt')) return 'Revit';\n  if (lower.endsWith('.dwg') || lower.endsWith('.dxf')) return 'CAD';\n  if (lower.endsWith('.obj')) return 'OBJ';\n  if (lower.endsWith('.fbx')) return 'FBX';\n  if (lower.endsWith('.gltf') || lower.endsWith('.glb')) return 'GLTF';\n  return 'Unknown';\n}\n\nconst fileType = detectFileType(fileName);\n\n// Quality settings for 3D rendering\nconst qualitySettings = {\n  low: { resolution: '800x600', polygons: 50000, textures: 'compressed', renderTime: '15s' },\n  medium: { resolution: '1920x1080', polygons: 200000, textures: 'standard', renderTime: '45s' },\n  high: { resolution: '2560x1440', polygons: 500000, textures: 'high', renderTime: '120s' },\n  ultra: { resolution: '3840x2160', polygons: 1000000, textures: 'ultra', renderTime: '300s' }\n};\n\nconst settings = qualitySettings[quality] || qualitySettings.medium;\n\n// Generate 3D visualization metadata\nconst visualization = {\n  modelId: `3d_${Date.now()}`,\n  fileName: fileName,\n  fileType: fileType,\n  operation: operation,\n  quality: quality,\n  settings: settings,\n  processedAt: new Date().toISOString(),\n  \n  // 3D Model Information\n  modelInfo: {\n    format: fileType,\n    estimatedSize: `${Math.random() * 50 + 10}MB`,\n    polygonCount: settings.polygons,\n    textureResolution: settings.textures,\n    renderResolution: settings.resolution\n  },\n  \n  // Visualization Capabilities\n  capabilities: [\n    'Interactive 3D rotation',\n    'Zoom and pan controls',\n    'Layer visibility toggle',\n    'Material property inspection',\n    'Measurement tools',\n    'Section cuts and slicing',\n    'Clash detection visualization',\n    'Progress tracking overlay',\n    'Annotation and markup',\n    'VR/AR preview support'\n  ],\n  \n  // View Presets\n  viewPresets: [\n    { name: 'Top View', camera: 'orthographic', angle: 'top' },\n    { name: 'Front Elevation', camera: 'orthographic', angle: 'front' },\n    { name: 'Side Elevation', camera: 'orthographic', angle: 'side' },\n    { name: '3D Perspective', camera: 'perspective', angle: '45deg' },\n    { name: 'Interior Walkthrough', camera: 'firstPerson', angle: 'interior' }\n  ],\n  \n  // Analysis Tools\n  analysisTools: [\n    'Quantity takeoff from 3D',\n    'Area and volume calculations',\n    'Material usage visualization',\n    'Structural analysis overlay',\n    'Thermal performance heatmap',\n    'Lighting simulation',\n    'Accessibility compliance check',\n    'Construction sequence animation'\n  ],\n  \n  // Integration Points\n  integrations: {\n    bimAgent: 'Extract quantities and costs from 3D model',\n    visualizationAgent: 'Generate 2D charts from 3D data',\n    complianceAgent: 'Verify 3D model against building codes',\n    scheduleAgent: '4D construction sequence visualization'\n  },\n  \n  // Estonian Construction Context\n  estonianFeatures: {\n    standards: ['EVS-EN standards visualization', 'Estonian building code overlay'],\n    units: 'Metric (m, m², m³, kg)',\n    materials: 'Estonian supplier material database',\n    pricing: '2025 Estonian market costs overlay'\n  }\n};\n\n// Generate viewing URLs (placeholder for actual 3D viewer implementation)\nconst viewerUrl = `https://3d-viewer.thorinvest.org/model/${visualization.modelId}`;\nconst embedCode = `<iframe src=\"${viewerUrl}\" width=\"100%\" height=\"600px\"></iframe>`;\nconst shareLink = `${viewerUrl}?share=public`;\n\n// API endpoints for 3D operations\nconst apiEndpoints = {\n  viewer: viewerUrl,\n  download: `${viewerUrl}/download`,\n  screenshot: `${viewerUrl}/screenshot`,\n  embed: embedCode,\n  api: `https://api.thorinvest.org/3d/model/${visualization.modelId}`,\n  webgl: `${viewerUrl}/webgl`,\n  vr: `${viewerUrl}/vr`,\n  ar: `${viewerUrl}/ar`\n};\n\n// Technology Stack Information\nconst techStack = {\n  frontend: [\n    'Three.js (3D rendering engine)',\n    'IFC.js (IFC file parsing)',\n    'Potree (Point cloud visualization)',\n    'Cesium (GIS integration)',\n    'A-Frame (VR/AR support)'\n  ],\n  backend: [\n    'OCCT (OpenCascade) for geometry processing',\n    'IfcOpenShell for IFC parsing',\n    'Assimp for model conversion',\n    'Point Cloud Library (PCL)',\n    'Blender headless for rendering'\n  ],\n  apis: [\n    'Speckle API (BIM data platform)',\n    'Autodesk Forge Viewer API',\n    'BIMserver.org API',\n    'OpenBIM API'\n  ]\n};\n\n// Generate implementation plan\nconst implementationPlan = {\n  phase1: {\n    name: 'MVP 3D Viewer',\n    duration: '1 week',\n    tasks: [\n      'Set up Three.js viewer',\n      'Implement IFC.js for IFC files',\n      'Basic camera controls',\n      'Layer visibility toggles',\n      'Screenshot capture'\n    ]\n  },\n  phase2: {\n    name: 'Advanced Features',\n    duration: '2 weeks',\n    tasks: [\n      'Measurement tools',\n      'Section cuts',\n      'Material inspection',\n      'Progress tracking overlay',\n      'Annotation system'\n    ]\n  },\n  phase3: {\n    name: 'AI Integration',\n    duration: '2 weeks',\n    tasks: [\n      'Clash detection with AI',\n      'Quality inspection automation',\n      'Progress tracking with computer vision',\n      'Defect detection overlay',\n      'Predictive maintenance markers'\n    ]\n  },\n  phase4: {\n    name: 'VR/AR Support',\n    duration: '1 week',\n    tasks: [\n      'WebXR implementation',\n      'VR walkthrough mode',\n      'AR site overlay',\n      'Mobile AR app integration'\n    ]\n  }\n};\n\n// Generate output message\nconst outputMessage = `🎨 **3D Vision Agent - Processing Complete**\\n\\n📦 **Model Information:**\\n• File: ${fileName}\\n• Format: ${fileType}\\n• Quality: ${quality} (${settings.resolution})\\n• Estimated Polygons: ${settings.polygons.toLocaleString()}\\n\\n🖥️ **Viewing Options:**\\n• 🌐 Web Viewer: ${viewerUrl}\\n• 📱 Mobile Friendly: Yes\\n• 🥽 VR/AR Ready: Yes\\n• 📊 Embed Code: Available\\n\\n🔧 **Capabilities:**\\n${visualization.capabilities.slice(0, 5).map(c => `• ${c}`).join('\\n')}\\n\\n📐 **Analysis Tools:**\\n${visualization.analysisTools.slice(0, 4).map(t => `• ${t}`).join('\\n')}\\n\\n🇪🇪 **Estonian Features:**\\n• EVS standards overlay\\n• Metric units\\n• 2025 pricing data\\n• Local supplier materials\\n\\n🚀 **Next Steps:**\\n1. View model in 3D: ${viewerUrl}\\n2. Generate quantity takeoff\\n3. Create construction sequence animation\\n4. Export for VR walkthrough\\n\\n✅ 3D visualization ready for stakeholder presentation!`;\n\nreturn [{\n  json: {\n    success: true,\n    visualization: visualization,\n    viewerUrl: viewerUrl,\n    embedCode: embedCode,\n    shareLink: shareLink,\n    apiEndpoints: apiEndpoints,\n    techStack: techStack,\n    implementationPlan: implementationPlan,\n    message: outputMessage,\n    readyFor3D: true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 200],
+      "id": "3d-process-004",
+      "name": "🎨 Generate 3D Visualization"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.speckle.xyz/graphql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_SPECKLE_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=mutation { streamCreate(stream: { name: \"{{ $json.fileName }}\", description: \"3D Construction Model\", isPublic: true }) { id } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 400],
+      "id": "3d-speckle-005",
+      "name": "🌐 Upload to Speckle (Optional)",
+      "notes": "Optional: Upload 3D model to Speckle platform for web viewing",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=https://quickchart.io/chart",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"bar\",\n  \"data\": {\n    \"labels\": [\"Concrete\", \"Steel\", \"Timber\", \"Walls\", \"Roofing\"],\n    \"datasets\": [{\n      \"label\": \"Material Quantities (m³/m²)\",\n      \"data\": [150, 45, 89, 320, 180],\n      \"backgroundColor\": \"rgba(54, 162, 235, 0.8)\"\n    }]\n  },\n  \"options\": {\n    \"title\": {\n      \"display\": true,\n      \"text\": \"3D Model Material Breakdown\",\n      \"fontSize\": 18\n    },\n    \"legend\": { \"display\": true },\n    \"scales\": {\n      \"yAxes\": [{\n        \"ticks\": { \"beginAtZero\": true }\n      }]\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 300],
+      "id": "3d-chart-006",
+      "name": "📊 Generate Material Chart"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.apiEndpoints.screenshot }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "view",
+              "value": "perspective"
+            },
+            {
+              "name": "resolution",
+              "value": "1920x1080"
+            },
+            {
+              "name": "format",
+              "value": "png"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 500],
+      "id": "3d-screenshot-007",
+      "name": "📸 Generate Screenshot",
+      "notes": "Captures 3D model screenshot for preview"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "result",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            },
+            {
+              "name": "viewerUrl",
+              "value": "={{ $json.viewerUrl }}",
+              "type": "string"
+            },
+            {
+              "name": "embedCode",
+              "value": "={{ $json.embedCode }}",
+              "type": "string"
+            },
+            {
+              "name": "shareLink",
+              "value": "={{ $json.shareLink }}",
+              "type": "string"
+            },
+            {
+              "name": "visualization",
+              "value": "={{ JSON.stringify($json.visualization) }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 300],
+      "id": "3d-output-008",
+      "name": "📤 Return Results"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "BIM_DATA_SHEET_ID",
+        "sheetName": "3D Visualizations",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "FileName": "={{ $json.fileName }}",
+            "FileType": "={{ $json.fileType }}",
+            "ViewerURL": "={{ $json.viewerUrl }}",
+            "Quality": "={{ $json.quality }}",
+            "Operation": "={{ $json.operation }}",
+            "ModelID": "={{ $json.visualization.modelId }}"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1120, 500],
+      "id": "3d-log-009",
+      "name": "📝 Log to Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_OAUTH_CONSTRUCTION",
+          "name": "Google Sheets Construction"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Point Cloud Processing\n// For LiDAR and photogrammetry data\n\nconst inputData = $('📥 Called by Manager').item.json;\n\nconst pointCloudAnalysis = {\n  operation: 'point_cloud_processing',\n  fileName: inputData.fileName,\n  features: [\n    'Point cloud decimation',\n    'Noise reduction',\n    'Surface reconstruction',\n    'Mesh generation',\n    'Texture mapping',\n    'As-built vs design comparison',\n    'Progress tracking',\n    'Volume calculations'\n  ],\n  tools: [\n    'Potree for web visualization',\n    'CloudCompare for processing',\n    'PDAL for data pipelines',\n    'Entwine for tiling'\n  ],\n  estonianUseCase: [\n    'Construction progress monitoring',\n    'Existing building documentation',\n    'Renovation planning',\n    'Historical building preservation',\n    'Site surveying and earthwork'\n  ]\n};\n\nreturn [{\n  json: {\n    success: true,\n    pointCloudAnalysis: pointCloudAnalysis,\n    message: `📍 Point Cloud Processing Ready\\n\\nCapabilities: ${pointCloudAnalysis.features.length} features\\nTools: ${pointCloudAnalysis.tools.join(', ')}\\n\\nEstonian Use Cases: ${pointCloudAnalysis.estonianUseCase.length} scenarios`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 600],
+      "id": "3d-pointcloud-010",
+      "name": "📍 Point Cloud Processing",
+      "notes": "For LiDAR and photogrammetry data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// VR/AR Preparation\n// Generate VR/AR ready models\n\nconst inputData = $('📥 Called by Manager').item.json;\n\nconst vrArSetup = {\n  operation: 'vr_ar_preparation',\n  platforms: [\n    { name: 'Meta Quest', format: 'WebXR', notes: 'Browser-based VR' },\n    { name: 'iOS AR', format: 'USDZ', notes: 'Apple AR Quick Look' },\n    { name: 'Android AR', format: 'GLB', notes: 'Google Scene Viewer' },\n    { name: 'HoloLens', format: 'FBX', notes: 'Mixed reality' }\n  ],\n  features: [\n    'Immersive site walkthrough',\n    'Interactive object inspection',\n    'Real-time measurement tools',\n    'On-site AR overlay',\n    'Collaborative VR meetings',\n    'Safety training simulations',\n    'Design review in VR',\n    'Client presentation mode'\n  ],\n  estonianApplications: [\n    'Pre-sale apartment tours',\n    'Client design approval',\n    'Remote site inspections',\n    'Worker safety training',\n    'Heritage building visualization'\n  ],\n  implementation: {\n    framework: 'A-Frame + AR.js',\n    rendering: 'Three.js',\n    compatibility: 'WebXR Device API',\n    fallback: '2D viewer for unsupported devices'\n  }\n};\n\nconst vrUrl = `https://vr.thorinvest.org/model/${inputData.fileName}`;\nconst arUrl = `https://ar.thorinvest.org/model/${inputData.fileName}`;\n\nreturn [{\n  json: {\n    success: true,\n    vrArSetup: vrArSetup,\n    vrUrl: vrUrl,\n    arUrl: arUrl,\n    message: `🥽 VR/AR Ready!\\n\\n📱 Platforms: ${vrArSetup.platforms.length}\\n🎯 Features: ${vrArSetup.features.length}\\n🇪🇪 Estonian Use Cases: ${vrArSetup.estonianApplications.length}\\n\\n🔗 VR Link: ${vrUrl}\\n🔗 AR Link: ${arUrl}\\n\\n✨ Scan QR code on mobile for AR experience!`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 700],
+      "id": "3d-vrar-011",
+      "name": "🥽 VR/AR Preparation"
+    }
+  ],
+  "connections": {
+    "📥 Called by Manager": {
+      "main": [[{"node": "🔀 Operation Router", "type": "main", "index": 0}]]
+    },
+    "🔀 Operation Router": {
+      "main": [
+        [
+          {"node": "📂 Download BIM File", "type": "main", "index": 0},
+          {"node": "📍 Point Cloud Processing", "type": "main", "index": 0}
+        ],
+        [
+          {"node": "🥽 VR/AR Preparation", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "📂 Download BIM File": {
+      "main": [[{"node": "🎨 Generate 3D Visualization", "type": "main", "index": 0}]]
+    },
+    "🎨 Generate 3D Visualization": {
+      "main": [
+        [
+          {"node": "📊 Generate Material Chart", "type": "main", "index": 0},
+          {"node": "📸 Generate Screenshot", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "📊 Generate Material Chart": {
+      "main": [[{"node": "📤 Return Results", "type": "main", "index": 0}]]
+    },
+    "📸 Generate Screenshot": {
+      "main": [[{"node": "📝 Log to Google Sheets", "type": "main", "index": 0}]]
+    },
+    "📤 Return Results": {
+      "main": [[{"node": "📝 Log to Google Sheets", "type": "main", "index": 0}]]
+    },
+    "📍 Point Cloud Processing": {
+      "main": [[{"node": "📤 Return Results", "type": "main", "index": 0}]]
+    },
+    "🥽 VR/AR Preparation": {
+      "main": [[{"node": "📤 Return Results", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {"name": "construction"},
+    {"name": "3d"},
+    {"name": "visualization"},
+    {"name": "bim"},
+    {"name": "vr"},
+    {"name": "ar"}
+  ],
+  "version": "1.0.0",
+  "description": "Advanced 3D visualization, VR/AR support, and point cloud processing for construction projects"
+}

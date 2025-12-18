@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Card, 
-  CardContent, 
-  Switch, 
-  FormControlLabel, 
-  TextField, 
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Switch,
+  FormControlLabel,
+  TextField,
   Button,
   Select,
   MenuItem,
@@ -23,17 +23,18 @@ import { useSnackbar } from 'notistack';
 const Settings = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
-  
+
   // Form state
   const [settings, setSettings] = useState({
     language: 'en',
     region: 'tartu',
     enableNotifications: true,
     darkMode: false,
-    n8nWebhookUrl: 'https://n8n.srv1071801.hstgr.cloud/webhook',
+    n8nWebhookUrl: 'https://n8n.construction.thorspark.cloud/webhook',
     apiKey: '',
     defaultWorkflow: 'auto',
     includeVat: true,
+    vatCountry: 'EE',
   });
 
   const handleChange = (field: string) => (event: any) => {
@@ -46,7 +47,7 @@ const Settings = () => {
     try {
       // Save to localStorage as fallback
       localStorage.setItem('userSettings', JSON.stringify(settings));
-      
+
       // Try to save to API if endpoint exists
       try {
         await api.post('/v1/settings', settings);
@@ -95,7 +96,7 @@ const Settings = () => {
       <Typography variant="h4" fontWeight={700} gutterBottom>
         Settings
       </Typography>
-      
+
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Card>
@@ -103,8 +104,8 @@ const Settings = () => {
               <Typography variant="h6" gutterBottom>General Settings</Typography>
               <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Language</InputLabel>
-                <Select 
-                  value={settings.language} 
+                <Select
+                  value={settings.language}
                   onChange={handleChange('language')}
                   label="Language"
                 >
@@ -114,8 +115,8 @@ const Settings = () => {
               </FormControl>
               <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Region</InputLabel>
-                <Select 
-                  value={settings.region} 
+                <Select
+                  value={settings.region}
                   onChange={handleChange('region')}
                   label="Region"
                 >
@@ -126,8 +127,8 @@ const Settings = () => {
               </FormControl>
               <FormControlLabel
                 control={
-                  <Switch 
-                    checked={settings.enableNotifications} 
+                  <Switch
+                    checked={settings.enableNotifications}
                     onChange={handleChange('enableNotifications')}
                   />
                 }
@@ -135,8 +136,8 @@ const Settings = () => {
               />
               <FormControlLabel
                 control={
-                  <Switch 
-                    checked={settings.darkMode} 
+                  <Switch
+                    checked={settings.darkMode}
                     onChange={handleChange('darkMode')}
                   />
                 }
@@ -145,7 +146,7 @@ const Settings = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -169,8 +170,8 @@ const Settings = () => {
               <Alert severity="info" sx={{ mb: 2 }}>
                 API settings are configured in your N8N workflows
               </Alert>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 startIcon={<Refresh />}
                 onClick={handleTestConnection}
               >
@@ -179,7 +180,7 @@ const Settings = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12}>
           <Card>
             <CardContent>
@@ -188,8 +189,8 @@ const Settings = () => {
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth>
                     <InputLabel>Default Workflow</InputLabel>
-                    <Select 
-                      value={settings.defaultWorkflow} 
+                    <Select
+                      value={settings.defaultWorkflow}
                       onChange={handleChange('defaultWorkflow')}
                       label="Default Workflow"
                     >
@@ -203,18 +204,18 @@ const Settings = () => {
                 <Grid item xs={12} md={6}>
                   <FormControlLabel
                     control={
-                      <Switch 
-                        checked={settings.includeVat} 
+                      <Switch
+                        checked={settings.includeVat}
                         onChange={handleChange('includeVat')}
                       />
                     }
-                    label="Include VAT in calculations (22%)"
+                    label="Include VAT (Estonia 24%)"
                   />
                 </Grid>
               </Grid>
               <Divider sx={{ my: 3 }} />
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 startIcon={<Save />}
                 onClick={handleSave}
                 disabled={loading}

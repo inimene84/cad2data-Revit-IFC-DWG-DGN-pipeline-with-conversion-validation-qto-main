@@ -1,0 +1,183 @@
+{
+  "name": "01_Intake_Drive_Gmail",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "triggerOn": "update",
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [300, 500],
+      "name": "Drive Watch (Project Folders)"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 10,
+        "additionalFields": {
+          "q": "label:site OR label:RFI"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [300, 700],
+      "name": "Gmail Watch (RFI/Site)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "root",
+              "name": "drive_root",
+              "type": "string",
+              "value": "Drive/Projects"
+            },
+            {
+              "id": "project",
+              "name": "project_name",
+              "type": "string",
+              "value": "DemoProject"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [560, 300],
+      "name": "Defaults"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize Drive/Gmail intake to a common file record\nconst items = $input.all();\nreturn items.map((it, i) => {\n  const src = it.json.source || (it.json.threadId ? 'gmail' : 'drive');\n  return { json: {\n    source: src,\n    file_name: it.json.name || it.json.subject || `item_${i}`,\n    mime: it.json.mimeType || 'message/rfc822',\n    project: $node['Defaults'].json.project_name,\n    drive_root: $node['Defaults'].json.drive_root,\n    metadata: it.json\n  }};\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [820, 300],
+      "name": "Normalize Intake"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decide target project folders in Drive\nconst items = $input.all();\nreturn items.map(it => {\n  const j = it.json;\n  const base = `${j.drive_root}/${j.project}`;\n  const sub = j.source === 'gmail' ? 'Intake' : 'Intake';\n  j.target_drive_path = `${base}/${sub}`;\n  return { json: j };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300],
+      "name": "Route to Drive"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "binaryData": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1340, 300],
+      "name": "Upload to Drive Intake"
+    },
+    {
+      "parameters": {
+        "subject": "Intake received: {{$json.file_name}}",
+        "text": "Project: {{$json.project}}\nSource: {{$json.source}}\nStored at: {{$json.target_drive_path}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1600, 300],
+      "name": "Notify via Gmail"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Defaults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive Watch (Project Folders)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Watch (RFI/Site)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Defaults": {
+      "main": [
+        [
+          {
+            "node": "Normalize Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Intake": {
+      "main": [
+        [
+          {
+            "node": "Route to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Drive": {
+      "main": [
+        [
+          {
+            "node": "Upload to Drive Intake",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify via Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

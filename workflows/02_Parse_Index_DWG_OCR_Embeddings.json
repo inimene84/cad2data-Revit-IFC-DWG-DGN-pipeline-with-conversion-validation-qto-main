@@ -1,0 +1,111 @@
+{
+  "name": "02_Parse_Index_DWG_OCR_Embeddings",
+  "nodes": [
+    {"parameters": {}, "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [300, 300], "name": "Start"},
+    {
+      "parameters": {
+        "assignments": {"assignments": [
+          {"name": "dwg_service_url", "type": "string", "value": "http://localhost:5055", "id": "s1"},
+          {"name": "chroma_url", "type": "string", "value": "http://localhost:8000", "id": "s2"},
+          {"name": "project_name", "type": "string", "value": "DemoProject", "id": "s3"},
+          {"name": "drive_root", "type": "string", "value": "Drive/Projects", "id": "s4"}
+        ]}
+      },
+      "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [540, 300], "name": "Defaults"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: file records from Intake (simulate here)\nreturn [{ json: { path: 'C:/path/to/sample.dwg', mime: 'image/vnd.dwg', project: $node['Defaults'].json.project_name } }, { json: { path: 'C:/path/to/drawing.pdf', mime: 'application/pdf', project: $node['Defaults'].json.project_name } }];"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [800, 300], "name": "Simulate Intake"
+    },
+    {
+      "parameters": {
+        "conditions": {"string": [{"value1": "={{$json.mime}}", "operation": "contains", "value2": "dwg"}]}
+      },
+      "type": "n8n-nodes-base.if", "typeVersion": 1, "position": [1060, 300], "name": "Is DWG?"
+    },
+    {
+      "parameters": {
+        "url": "={{$node['Defaults'].json.dwg_service_url}}/convert-dwg",
+        "options": {},
+        "sendBody": true,
+        "jsonParameters": true,
+        "bodyParametersJson": "={ \n  \"input_path\": $json.path, \n  \"output_dir\": `C:/Temp/${$json.project}/dwg_out`\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1320, 200], "name": "DWG Convert"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse DWG conversion result and pick XLSX\nconst r = $input.first().json;\nreturn (r.xlsx || []).map((p,i)=>({ json: { xlsx_path: p, project: $node['Defaults'].json.project_name, source: 'dwg_xlsx' } }));"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1580, 200], "name": "Collect XLSX"
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO: parse XLSX here with Spreadsheet node in real flow\n// Emit quantities rows placeholder\nreturn $input.all().map(it=>({ json: { project: it.json.project, source: it.json.source, category: 'Roof', layer: 'ROOF_INSUL', measure_type: 'Area', value: 120.5, unit: 'm2', file: it.json.xlsx_path } }));"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1840, 200], "name": "Parse XLSX → Quantities"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Upsert quantities to DB placeholder (log only)\nconsole.log('Quantities', $input.all().length);\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [2100, 200], "name": "Upsert Quantities (placeholder)"
+    },
+    {
+      "parameters": {
+        "url": "={{$node['Defaults'].json.chroma_url}}/upsert",
+        "sendBody": true,
+        "jsonParameters": true,
+        "bodyParametersJson": "={\n  \"collection\": \"{{$node['Defaults'].json.project_name}}\",\n  \"documents\": $items().map(i=>i.json.category + ' ' + i.json.layer + ' ' + i.json.measure_type + ' ' + i.json.value),\n  \"metadatas\": $items().map(i=>i.json),\n  \"ids\": $items().map((i,idx)=> 'qty_' + idx)\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [2360, 200], "name": "Embeddings Upsert (Chroma placeholder)"
+    },
+    {
+      "parameters": {
+        "conditions": {"string": [{"value1": "={{$json.mime}}", "operation": "contains", "value2": "pdf"}]}
+      },
+      "type": "n8n-nodes-base.if", "typeVersion": 1, "position": [1060, 420], "name": "Is PDF?"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5056/ocr",
+        "sendBody": true,
+        "jsonParameters": true,
+        "bodyParametersJson": "={ \n  \"file_path\": $json.path\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1320, 460], "name": "OCR (Tesseract)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chunk OCR text with construction-specific processing\nconst ocr_result = $input.first().json;\nconst text = ocr_result.text || '';\nconst dimensions = ocr_result.dimensions || [];\nconst materials = ocr_result.materials || [];\nconst layers = ocr_result.layers || [];\n\n// Chunk text with metadata\nconst chunks = [];\nconst size = 1000;\nfor (let i=0;i<text.length;i+=size){ \n  chunks.push({\n    text: text.slice(i, i+size),\n    dimensions: dimensions.filter(d => text.slice(i, i+size).includes(d)),\n    materials: materials.filter(m => text.slice(i, i+size).toLowerCase().includes(m.toLowerCase())),\n    layers: layers.filter(l => text.slice(i, i+size).includes(l))\n  });\n}\n\nreturn chunks.map((chunk, idx)=>({ \n  json: { \n    project: $node['Defaults'].json.project_name, \n    text: chunk.text, \n    page: idx+1, \n    source: 'ocr',\n    dimensions: chunk.dimensions,\n    materials: chunk.materials,\n    layers: chunk.layers\n  } \n}));"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1580, 460], "name": "Chunk Text with Metadata"
+    },
+    {
+      "parameters": {
+        "url": "={{$node['Defaults'].json.chroma_url}}/upsert",
+        "sendBody": true,
+        "jsonParameters": true,
+        "bodyParametersJson": "={\n  \"collection\": \"{{$node['Defaults'].json.project_name}}\",\n  \"documents\": $items().map(i=>i.json.text),\n  \"metadatas\": $items().map(i=>i.json),\n  \"ids\": $items().map((i,idx)=> 'ocr_' + idx)\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1840, 460], "name": "Embeddings Upsert (OCR)"
+    }
+  ],
+  "connections": {
+    "Start": {"main": [[{"node": "Defaults", "type": "main", "index": 0}]]},
+    "Defaults": {"main": [[{"node": "Simulate Intake", "type": "main", "index": 0}]]},
+    "Simulate Intake": {"main": [[{"node": "Is DWG?", "type": "main", "index": 0}, {"node": "Is PDF?", "type": "main", "index": 0}]]},
+    "Is DWG?": {"main": [[{"node": "DWG Convert", "type": "main", "index": 0}],[[]]]},
+    "DWG Convert": {"main": [[{"node": "Collect XLSX", "type": "main", "index": 0}]]},
+    "Collect XLSX": {"main": [[{"node": "Parse XLSX → Quantities", "type": "main", "index": 0}]]},
+    "Parse XLSX → Quantities": {"main": [[{"node": "Upsert Quantities (placeholder)", "type": "main", "index": 0}]]},
+    "Upsert Quantities (placeholder)": {"main": [[{"node": "Embeddings Upsert (Chroma placeholder)", "type": "main", "index": 0}]]},
+    "Is PDF?": {"main": [[[],[{"node": "OCR (placeholder)", "type": "main", "index": 0}]]]},
+    "OCR (placeholder)": {"main": [[{"node": "Chunk Text", "type": "main", "index": 0}]]},
+    "Chunk Text": {"main": [[{"node": "Embeddings Upsert (OCR)", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"}
+}

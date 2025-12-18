@@ -1,0 +1,33 @@
+{
+  "name": "Ultimate Construction Agent",
+  "nodes": [
+    {"parameters": {}, "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [200, 120], "name": "Start"},
+    {"parameters": {"triggerOn": "update"}, "type": "n8n-nodes-base.googleDriveTrigger", "typeVersion": 1, "position": [200, 320], "name": "Drive Trigger"},
+    {"parameters": {"operation": "getAll", "limit": 5}, "type": "n8n-nodes-base.gmail", "typeVersion": 2, "position": [200, 520], "name": "Gmail Trigger"},
+    {"parameters": {"assignments": {"assignments": [
+      {"name": "dwg_service_url", "type": "string", "value": "http://localhost:5055", "id": "d1"},
+      {"name": "ocr_service_url", "type": "string", "value": "http://localhost:5056", "id": "d2"},
+      {"name": "drive_root", "type": "string", "value": "Drive/Projects", "id": "d4"},
+      {"name": "project_name", "type": "string", "value": "DemoProject", "id": "d5"}
+    ]}}, "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [480, 120], "name": "Defaults"},
+    {"parameters": {"description": "Provision project folders if needed", "workflowId": {"__rl": true, "value": "00_Drive_Project_Setup", "mode": "list"}, "workflowInputs": {"mappingMode": "defineBelow", "value": {"project_name": "={{$node['Defaults'].json.project_name}}", "drive_root": "={{$node['Defaults'].json.drive_root}}"}}}, "type": "@n8n/n8n-nodes-langchain.toolWorkflow", "typeVersion": 2.2, "position": [740, 120], "name": "Provision Project Folders"},
+    {"parameters": {"description": "Intake (Drive/Gmail)", "workflowId": {"__rl": true, "value": "01_Intake_Drive_Gmail", "mode": "list"}, "workflowInputs": {"mappingMode": "defineBelow", "value": {"drive_root": "={{$node['Defaults'].json.drive_root}}", "project_name": "={{$node['Defaults'].json.project_name}}"}}}, "type": "@n8n/n8n-nodes-langchain.toolWorkflow", "typeVersion": 2.2, "position": [980, 220], "name": "Intake Workflow"},
+    {"parameters": {"description": "Parse + Index (DWG/PDF)", "workflowId": {"__rl": true, "value": "02_Parse_Index_DWG_OCR_Embeddings", "mode": "list"}, "workflowInputs": {"mappingMode": "defineBelow", "value": {"project_name": "={{$node['Defaults'].json.project_name}}"}}}, "type": "@n8n/n8n-nodes-langchain.toolWorkflow", "typeVersion": 2.2, "position": [980, 360], "name": "Parse + Index"},
+    {"parameters": {"description": "Q&A Agent (RAG)", "workflowId": {"__rl": true, "value": "03_Agent_QA_RAG", "mode": "list"}, "workflowInputs": {"mappingMode": "defineBelow", "value": {"project_name": "={{$node['Defaults'].json.project_name}}"}}}, "type": "@n8n/n8n-nodes-langchain.toolWorkflow", "typeVersion": 2.2, "position": [980, 500], "name": "Agent Q&A"},
+    {"parameters": {"description": "Reports Out", "workflowId": {"__rl": true, "value": "04_Reports_Out", "mode": "list"}, "workflowInputs": {"mappingMode": "defineBelow", "value": {"project_name": "={{$node['Defaults'].json.project_name}}", "drive_root": "={{$node['Defaults'].json.drive_root}}"}}}, "type": "@n8n/n8n-nodes-langchain.toolWorkflow", "typeVersion": 2.2, "position": [980, 640], "name": "Reports"},
+    {"parameters": {"subject": "Ultimate Construction Agent: run complete", "text": "Project: {{$node['Defaults'].json.project_name}}\nDrive Root: {{$node['Defaults'].json.drive_root}}"}, "type": "n8n-nodes-base.gmail", "typeVersion": 2, "position": [1240, 640], "name": "Notify"}
+  ],
+  "connections": {
+    "Start": {"main": [[{"node": "Defaults", "type": "main", "index": 0}]]},
+    "Drive Trigger": {"main": [[{"node": "Provision Project Folders", "type": "main", "index": 0}]]},
+    "Gmail Trigger": {"main": [[{"node": "Provision Project Folders", "type": "main", "index": 0}]]},
+    "Defaults": {"main": [[{"node": "Provision Project Folders", "type": "main", "index": 0}]]},
+    "Provision Project Folders": {"main": [[{"node": "Intake Workflow", "type": "main", "index": 0}]]},
+    "Intake Workflow": {"main": [[{"node": "Parse + Index", "type": "main", "index": 0}]]},
+    "Parse + Index": {"main": [[{"node": "Agent Q&A", "type": "main", "index": 0}]]},
+    "Agent Q&A": {"main": [[{"node": "Reports", "type": "main", "index": 0}]]},
+    "Reports": {"main": [[{"node": "Notify", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"}
+}
