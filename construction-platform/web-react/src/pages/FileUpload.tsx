@@ -72,7 +72,8 @@ const FileUpload = () => {
   const steps = ['Select Files', 'Configure Processing', 'Process & Estimate'];
 
   // n8n webhook URL for cost estimation
-  const N8N_WEBHOOK_URL = 'https://n8n.construction.thorspark.cloud/webhook/cost-estimation';
+  // n8n webhook URL for cost estimation
+  const N8N_WEBHOOK_URL = process.env.REACT_APP_N8N_WEBHOOK_URL || 'https://n8n.construction.thorspark.cloud/webhook/cost-estimation';
 
   const countries = [
     { code: 'EE', name: 'Estonia', vat: 24 },
