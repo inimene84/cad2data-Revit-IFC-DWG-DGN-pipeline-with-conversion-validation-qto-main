@@ -693,7 +693,8 @@ async def extract_excel_data(file: UploadFile = File(...)):
                 column_mapping = {}
                 for col in df.columns:
                     col_str = str(col).lower()
-                    if 'material' in col_str or 'description' in col_str or 'item' in col_str or 'layer' in col_str or 'materjal' in col_str or 'kirjeldus' in col_str or 'nimetus' in col_str:
+                    # Material/element name columns - includes 'name' for CAD exports
+                    if 'material' in col_str or 'description' in col_str or 'item' in col_str or 'layer' in col_str or 'materjal' in col_str or 'kirjeldus' in col_str or 'nimetus' in col_str or col_str == 'name':
                         column_mapping['material'] = col
                     if 'quantity' in col_str or 'amount' in col_str or 'qty' in col_str or 'count' in col_str or 'length' in col_str or 'area' in col_str or 'volume' in col_str or 'kogus' in col_str or 'maht' in col_str:
                         column_mapping['quantity'] = col
@@ -701,6 +702,14 @@ async def extract_excel_data(file: UploadFile = File(...)):
                         column_mapping['unit'] = col
                     if 'price' in col_str or 'cost' in col_str or 'total' in col_str or 'hind' in col_str or 'maksumus' in col_str or 'summa' in col_str:
                         column_mapping['price'] = col
+                
+                # CAD export fallback - if no material column found but has CAD-like columns
+                if 'material' not in column_mapping:
+                    cad_columns = ['Handle', 'ParentID', 'Color', 'Linetype', 'Lineweight']
+                    has_cad_data = any(col in df.columns for col in cad_columns)
+                    if has_cad_data and 'Name' in df.columns:
+                        column_mapping['material'] = 'Name'
+                        logger.info(f"Detected CAD export format, using 'Name' column for elements")
                 
                 logger.info(f"Column mapping for '{sheet_name}': {column_mapping}")
 
@@ -763,6 +772,33 @@ async def extract_excel_data(file: UploadFile = File(...)):
             status='success',
             sheets=str(sheet_count)
         ).inc()
+
+        # Deduplicate CAD elements - group by material name and count
+        if construction_items:
+            # Check if this looks like CAD data (many duplicate names, no quantities)
+            material_counts = {}
+            total_qty_zero = sum(1 for item in construction_items if item.get('quantity', 0) == 0)
+            is_cad_data = total_qty_zero > len(construction_items) * 0.8  # 80%+ have no quantity
+            
+            if is_cad_data:
+                logger.info(f"Detected CAD layer data, deduplicating {len(construction_items)} items")
+                for item in construction_items:
+                    mat_name = item['material']
+                    # Clean up CAD layer names (remove prefixes like "New_")
+                    clean_name = mat_name.replace('New_', '').replace('_Pen_No_', ' ').strip()
+                    if clean_name:
+                        if clean_name not in material_counts:
+                            material_counts[clean_name] = {
+                                'material': clean_name,
+                                'quantity': 0,
+                                'unit': 'item',
+                                'price': 0.0,
+                                'sheet': item['sheet']
+                            }
+                        material_counts[clean_name]['quantity'] += 1
+                
+                construction_items = list(material_counts.values())
+                logger.info(f"Deduplicated to {len(construction_items)} unique elements")
 
         return {
             "status": "success", 
