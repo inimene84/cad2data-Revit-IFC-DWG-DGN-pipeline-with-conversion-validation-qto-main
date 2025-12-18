@@ -170,17 +170,22 @@ async def search_work_items(request: CostSearchRequest):
         work_items = []
         for r in results:
             payload = r.payload or {}
+            # Data is nested in payload_full
+            pf = payload.get("payload_full", {})
+            cost = pf.get("cost_summary", {})
+            hierarchy = pf.get("hierarchy", {})
+            
             work_items.append(WorkItem(
                 score=round(r.score, 4),
-                rate_code=payload.get("rate_code", ""),
-                name=payload.get("rate_original_name", ""),
-                unit=payload.get("rate_unit", ""),
-                price_median=payload.get("price_est_median"),
-                price_min=payload.get("price_est_min"),
-                price_max=payload.get("price_est_max"),
-                labor_hours=payload.get("labor_hours_workers"),
-                department=payload.get("department_name"),
-                category=payload.get("category_type")
+                rate_code=pf.get("rate_code", ""),
+                name=pf.get("rate_name", ""),
+                unit=pf.get("rate_unit", ""),
+                price_median=cost.get("total_cost_position"),
+                price_min=cost.get("total_resource_cost_position"),
+                price_max=cost.get("total_cost_position"),
+                labor_hours=cost.get("worker_labor_hours"),
+                department=hierarchy.get("department_name"),
+                category=hierarchy.get("category_type")
             ))
         
         return CostSearchResponse(
