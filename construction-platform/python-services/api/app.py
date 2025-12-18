@@ -216,7 +216,7 @@ app = FastAPI(
 # CORS configuration - restrict origins for security
 allowed_origins = os.getenv(
     'ALLOWED_ORIGINS',
-    'https://app.thorinvest.org,https://n8n.thorinvest.org,http://localhost:8501,http://localhost:5678,http://localhost:3000'
+    '*'
 ).split(',')
 
 app.add_middleware(
