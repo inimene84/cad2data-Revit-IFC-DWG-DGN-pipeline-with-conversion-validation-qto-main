@@ -861,20 +861,68 @@ async def extract_excel_data(file: UploadFile = File(...)):
                         'price': 0.0
                     }
                     
-                    # Choose best quantity/unit based on available data
+                    # Determine element category and default price based on layer name
+                    name_lower = name.lower()
+                    
+                    # Category detection and default pricing (Estonian construction avg prices)
+                    if any(k in name_lower for k in ['wall', 'sein', 'seinad']):
+                        category = 'walls'
+                        price_per_m2 = 85.0  # €/m² for wall work
+                    elif any(k in name_lower for k in ['floor', 'põrand', 'vahelagi']):
+                        category = 'floors'
+                        price_per_m2 = 65.0  # €/m² for flooring
+                    elif any(k in name_lower for k in ['roof', 'katus', 'lagi']):
+                        category = 'roofing'
+                        price_per_m2 = 95.0  # €/m² for roofing
+                    elif any(k in name_lower for k in ['door', 'uks', 'uksed']):
+                        category = 'doors'
+                        price_per_item = 450.0  # €/item for doors
+                    elif any(k in name_lower for k in ['window', 'aken', 'akna']):
+                        category = 'windows'
+                        price_per_item = 380.0  # €/item for windows
+                    elif any(k in name_lower for k in ['pipe', 'toru', 'kanal']):
+                        category = 'piping'
+                        price_per_m = 45.0  # €/m for pipes
+                    elif any(k in name_lower for k in ['wire', 'kaabel', 'elekter', 'electric']):
+                        category = 'electrical'
+                        price_per_m = 25.0  # €/m for electrical
+                    elif any(k in name_lower for k in ['fill', 'täide', 'hatch']):
+                        category = 'areas'
+                        price_per_m2 = 15.0  # €/m² for general areas
+                    elif any(k in name_lower for k in ['text', 'dim', 'annot', 'symbol']):
+                        category = 'annotations'
+                        price_per_m2 = 0.0  # No cost for annotations
+                    else:
+                        category = 'general'
+                        price_per_m2 = 25.0  # Default €/m² for general elements
+                    
+                    # Choose best quantity/unit based on available data and assign price
                     if data['total_area'] > 0:
                         item['quantity'] = round(data['total_area'] / 1000000, 2)  # Convert to m²
                         item['unit'] = 'm²'
                         item['total_area_mm2'] = round(data['total_area'], 2)
+                        # Apply area-based pricing
+                        unit_price = price_per_m2 if 'price_per_m2' in dir() else 25.0
+                        item['price'] = round(item['quantity'] * unit_price, 2)
+                        item['unit_price'] = unit_price
                     elif data['total_length'] > 0:
                         item['quantity'] = round(data['total_length'] / 1000, 2)  # Convert to m
                         item['unit'] = 'm'
                         item['total_length_mm'] = round(data['total_length'], 2)
+                        # Apply length-based pricing
+                        unit_price = price_per_m if 'price_per_m' in dir() else 35.0
+                        item['price'] = round(item['quantity'] * unit_price, 2)
+                        item['unit_price'] = unit_price
                     else:
                         item['quantity'] = data['element_count']
                         item['unit'] = 'item'
+                        # Apply item-based pricing
+                        unit_price = price_per_item if 'price_per_item' in dir() else 50.0
+                        item['price'] = round(item['quantity'] * unit_price, 2)
+                        item['unit_price'] = unit_price
                     
                     item['element_count'] = data['element_count']
+                    item['category'] = category
                     final_items.append(item)
                 
                 construction_items = final_items
