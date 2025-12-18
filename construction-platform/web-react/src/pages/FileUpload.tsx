@@ -46,7 +46,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSnackbar } from 'notistack';
-import { api } from '../services/api';
+import { api, apiService } from '../services/api';
 
 interface UploadedFile {
   id: string;
@@ -140,29 +140,29 @@ const FileUpload = () => {
       formData.append('project_name', projectName || 'Unnamed Project');
       formData.append('workflow_type', workflowType);
 
-      // Determine endpoint based on file type
-      let endpoint = '/extract-pdf';
-      const extension = uploadedFile.file.name.split('.').pop()?.toLowerCase();
-      if (['xls', 'xlsx'].includes(extension || '')) {
-        endpoint = '/extract-excel';
-      } else if (['dwg', 'dxf', 'ifc'].includes(extension || '')) {
-        endpoint = '/process-cad';
-      }
-
       // Update progress
       setFiles(prev => prev.map(f =>
         f.id === uploadedFile.id ? { ...f, progress: 60 } : f
       ));
 
-      const response = await api.post(endpoint, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
-          setFiles(prev => prev.map(f =>
-            f.id === uploadedFile.id ? { ...f, progress: Math.min(90, percentCompleted) } : f
-          ));
-        },
-      });
+      const onUploadProgress = (progressEvent: any) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
+        setFiles(prev => prev.map(f =>
+          f.id === uploadedFile.id ? { ...f, progress: Math.min(90, percentCompleted) } : f
+        ));
+      };
+
+      let response;
+      const extension = uploadedFile.file.name.split('.').pop()?.toLowerCase();
+
+      if (['xls', 'xlsx'].includes(extension || '')) {
+        response = await apiService.extractExcel(uploadedFile.file, onUploadProgress);
+      } else if (['dwg', 'dxf', 'ifc'].includes(extension || '')) {
+        response = await apiService.processCAD(uploadedFile.file, onUploadProgress);
+      } else {
+        // Default to PDF/Generic upload
+        response = await apiService.extractPDF(uploadedFile.file, onUploadProgress);
+      }
 
       // Update status to completed
       setFiles(prev => prev.map(f =>

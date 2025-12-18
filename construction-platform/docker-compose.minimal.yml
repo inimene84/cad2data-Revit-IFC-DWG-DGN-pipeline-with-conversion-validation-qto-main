@@ -12,13 +12,13 @@ services:
     environment:
       POSTGRES_DB: construction_ai
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - construction-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
     networks:
       - construction-network
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -92,10 +92,17 @@ services:
     env_file:
       - .env.production
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/construction_ai
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/construction_ai
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - QDRANT_URL=http://qdrant:6333
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
     volumes:
       - ./uploads:/app/uploads
       - ./output:/app/output
@@ -166,7 +173,7 @@ services:
     networks:
       - construction-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5056/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:5056/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -189,7 +196,7 @@ services:
     networks:
       - construction-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5057/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:5057/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -200,7 +207,6 @@ volumes:
   postgres_data:
   redis_data:
   qdrant_data:
-
 
 networks:
   construction-network:

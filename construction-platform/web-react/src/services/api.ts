@@ -47,38 +47,47 @@ api.interceptors.response.use(
 // API service functions
 export const apiService = {
   // File operations
-  uploadFile: (file: File, projectName?: string, workflowType?: string) => {
+  uploadFile: (
+    file: File,
+    projectName?: string,
+    workflowType?: string,
+    onUploadProgress?: (progressEvent: any) => void
+  ) => {
     const formData = new FormData();
     formData.append('file', file);
     if (projectName) formData.append('project_name', projectName);
     if (workflowType) formData.append('workflow_type', workflowType);
 
-    return api.post('/extract-pdf', formData, {
+    return api.post('/extraction/pdf', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
     });
   },
 
-  extractPDF: (file: File) => {
+  extractPDF: (file: File, onUploadProgress?: (progressEvent: any) => void) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/extract-pdf', formData, {
+    return api.post('/extraction/pdf', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
     });
   },
 
-  extractExcel: (file: File) => {
+  extractExcel: (file: File, onUploadProgress?: (progressEvent: any) => void) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/extract-excel', formData, {
+    return api.post('/extraction/excel', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
     });
   },
 
-  processCAD: (file: File) => {
+  processCAD: (file: File, onUploadProgress?: (progressEvent: any) => void) => {
     const formData = new FormData();
     formData.append('file', file);
     return api.post('/process-cad', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
     });
   },
 

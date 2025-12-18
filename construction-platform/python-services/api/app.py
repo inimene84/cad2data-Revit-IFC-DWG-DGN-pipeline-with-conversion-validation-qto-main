@@ -3,12 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from typing import List
-from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, Histogram, Gauge, Info
 import pandas as pd
-import fitz  # PyMuPDF
-import pytesseract
-from PIL import Image
 import io
 import json
 import math
@@ -134,16 +130,11 @@ except ImportError as e:
 from config import MATERIAL_KEYWORDS, REGIONAL_MULTIPLIERS
 
 # API Versioning
-try:
-    from routers.v1 import v1_router
-    from routers.v1.materials import materials_db, material_counter
-    API_VERSIONING_AVAILABLE = True
-except ImportError:
-    API_VERSIONING_AVAILABLE = False
-    v1_router = None
-    materials_db = {}
-    material_counter = 0
-    logger.warning("API versioning not available - routers not found")
+# API Versioning
+# Import directly to ensure we fail fast if routers are broken
+from routers.v1 import v1_router
+from routers.v1.materials import materials_db, material_counter
+API_VERSIONING_AVAILABLE = True
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -153,21 +144,7 @@ logger = logging.getLogger(__name__)
 if not PHASE2_IMPROVEMENTS_AVAILABLE:
     logger.warning("Phase 2 improvements not available - continuing without them")
 
-# Initialize Redis for caching
-try:
-    redis_client = redis.Redis(
-        host=os.getenv('REDIS_HOST', 'redis'), 
-        port=6379, 
-        db=0, 
-        decode_responses=True
-    )
-    redis_client.ping()
-    logger.info("Redis connected successfully")
-    redis_available = True
-except Exception as e:
-    redis_client = None
-    redis_available = False
-    logger.warning(f"Redis not available: {e}, caching disabled")
+from utils.redis_client import redis_client, redis_available
 
 # Thread pool for CPU-intensive tasks
 executor = ThreadPoolExecutor(max_workers=4)
@@ -211,6 +188,7 @@ websocket_manager = ConnectionManager()
 
 # API Versioning
 from routers.v1 import v1_router
+from routers.v1.extraction import router as extraction_router
 
 app = FastAPI(
     title="Construction AI Agent API",
@@ -380,77 +358,20 @@ else:
 # PROMETHEUS METRICS SETUP
 # ==========================================
 
-# Auto-instrument with default metrics
-instrumentator = Instrumentator(
-    should_group_status_codes=False,
-    should_ignore_untemplated=True,
-    should_respect_env_var=False,
-    should_instrument_requests_inprogress=True,
-    excluded_handlers=["/metrics", "/health"],
-    inprogress_name="construction_api_requests_inprogress",
-    inprogress_labels=True
+from utils.metrics import (
+    instrumentator, 
+    pdf_processing_counter, 
+    excel_processing_counter,
+    material_calculation_counter,
+    document_processing_time,
+    materials_detected_histogram,
+    cache_hit_counter,
+    cache_miss_counter,
+    redis_connection_status,
+    estonian_pricing_requests,
+    total_cost_calculated
 )
-
-# Custom metrics for construction operations
-pdf_processing_counter = Counter(
-    'construction_pdf_processed_total',
-    'Total number of PDFs processed',
-    ['status', 'cached']
-)
-
-excel_processing_counter = Counter(
-    'construction_excel_processed_total',
-    'Total number of Excel files processed',
-    ['status', 'sheets']
-)
-
-material_calculation_counter = Counter(
-    'construction_material_calculations_total',
-    'Total material calculations performed',
-    ['region', 'status']
-)
-
-document_processing_time = Histogram(
-    'construction_document_processing_seconds',
-    'Time spent processing construction documents',
-    ['document_type', 'operation'],
-    buckets=[0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0]
-)
-
-materials_detected_histogram = Histogram(
-    'construction_materials_detected',
-    'Number of materials detected in documents',
-    buckets=[0, 5, 10, 25, 50, 100, 200, 500]
-)
-
-cache_hit_counter = Counter(
-    'construction_cache_hits_total',
-    'Total cache hits',
-    ['operation']
-)
-
-cache_miss_counter = Counter(
-    'construction_cache_misses_total',
-    'Total cache misses',
-    ['operation']
-)
-
-redis_connection_status = Gauge(
-    'construction_redis_connected',
-    'Redis connection status (1=connected, 0=disconnected)'
-)
-
-estonian_pricing_requests = Counter(
-    'construction_estonian_pricing_requests_total',
-    'Estonian material pricing requests',
-    ['region', 'material_type']
-)
-
-total_cost_calculated = Histogram(
-    'construction_total_cost_eur',
-    'Total project costs calculated in EUR',
-    buckets=[100, 500, 1000, 5000, 10000, 50000, 100000, 500000]
-)
+from utils.redis_client import redis_available, redis_client
 
 # Set initial Redis status
 redis_connection_status.set(1 if redis_available else 0)
@@ -461,37 +382,7 @@ instrumentator.instrument(app).expose(app, endpoint="/metrics", include_in_schem
 logger.info("Prometheus metrics instrumentation enabled at /metrics")
 
 # Cache helper functions
-def get_cache_key(file_content: bytes, operation: str) -> str:
-    """Generate cache key for file operations"""
-    file_hash = hashlib.md5(file_content).hexdigest()
-    return f"construction_ai:{operation}:{file_hash}"
 
-async def get_cached_result(cache_key: str, operation: str) -> Optional[Dict]:
-    """Get cached result if available"""
-    if not redis_client:
-        cache_miss_counter.labels(operation=operation).inc()
-        return None
-    try:
-        cached = redis_client.get(cache_key)
-        if cached:
-            cache_hit_counter.labels(operation=operation).inc()
-            return json.loads(cached)
-        else:
-            cache_miss_counter.labels(operation=operation).inc()
-    except Exception as e:
-        logger.warning(f"Cache read error: {e}")
-        cache_miss_counter.labels(operation=operation).inc()
-    return None
-
-async def set_cached_result(cache_key: str, result: Dict, ttl: int = 3600):
-    """Cache result with TTL"""
-    if not redis_client:
-        return
-    try:
-        redis_client.setex(cache_key, ttl, json.dumps(result))
-    except Exception as e:
-        logger.warning(f"Cache write error: {e}")
-        redis_connection_status.set(0)
 
 @app.get("/")
 async def root():
@@ -515,459 +406,10 @@ async def health():
         "metrics_enabled": True
     }
 
-def process_pdf_page(page, page_num: int, material_keywords: List[str]) -> Dict:
-    """Process a single PDF page"""
-    try:
-        text = page.get_text()
-        
-        # If minimal text, try OCR
-        if len(text.strip()) < 50:
-            try:
-                pix = page.get_pixmap()
-                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                text = pytesseract.image_to_string(img, lang='eng+est')  # Added Estonian
-            except (pytesseract.TesseractNotFoundError, pytesseract.TesseractError) as e:
-                logger.warning(f"OCR failed on page {page_num + 1}: {e}")
-                return {"page": page_num + 1, "text": "", "construction_items": []}
+# Logic moved to services/pdf_processing.py
 
-        # Process lines for construction data
-        lines = text.split('\n')
-        page_data = []
-        construction_items = []
-        
-        for line in lines:
-            line = line.strip()
-            if len(line) > 5:
-                # Check for material keywords
-                line_lower = line.lower()
-                for keyword in material_keywords:
-                    if keyword in line_lower:
-                        # Try to extract quantity
-                        import re
-                        numbers = re.findall(r'\d+(?:\.\d+)?', line)
-                        quantity = float(numbers[0]) if numbers else None
-
-                        construction_items.append({
-                            'material': keyword,
-                            'text': line,
-                            'page': page_num + 1,
-                            'quantity': quantity,
-                            'unit': 'unit'  # Default unit
-                        })
-                        break
-
-                page_data.append({
-                    'page': page_num + 1,
-                    'text': line
-                })
-
-        return {
-            "page": page_num + 1,
-            "text": page_data,
-            "construction_items": construction_items
-        }
-    except Exception as e:
-        logger.error(f"Error processing page {page_num + 1}: {e}")
-        return {"page": page_num + 1, "text": [], "construction_items": []}
-
-@app.post("/extract-pdf")
-async def extract_pdf_data(file: UploadFile = File(...)):
-    """Extract construction data from PDF files with caching and async processing"""
-    start_time = datetime.now()
-    
-    try:
-        content = await file.read()
-        
-        # Check cache first
-        cache_key = get_cache_key(content, "pdf_extraction")
-        cached_result = await get_cached_result(cache_key, "pdf_extraction")
-        if cached_result:
-            logger.info(f"Returning cached result for {file.filename}")
-            pdf_processing_counter.labels(status='success', cached='true').inc()
-            return cached_result
-
-        # Save to temp file to avoid stream issues
-        import tempfile
-        import os
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(content)
-            tmp_path = tmp.name
-            
-        try:
-            # Open PDF document from disk
-            logger.info(f"Opening PDF from disk: {tmp_path}")
-            doc = fitz.open(tmp_path)
-            logger.info(f"PDF opened, pages: {len(doc)}")
-
-            # Process pages sequentially
-            page_results = []
-            for page_num in range(len(doc)):
-                logger.info(f"Processing page {page_num + 1}/{len(doc)}")
-                page = doc[page_num]
-                result = process_pdf_page(
-                    page, 
-                    page_num, 
-                    MATERIAL_KEYWORDS
-                )
-                page_results.append(result)
-            
-            # Combine results
-            extracted_data = []
-            construction_items = []
-            
-            for result in page_results:
-                extracted_data.extend(result["text"])
-                construction_items.extend(result["construction_items"])
-
-            doc.close()
-            
-        finally:
-            # Clean up temp file
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-        
-        # Record metrics
-        processing_time = (datetime.now() - start_time).total_seconds()
-        document_processing_time.labels(
-            document_type='pdf', 
-            operation='extraction'
-        ).observe(processing_time)
-        
-        materials_detected_histogram.observe(len(construction_items))
-        pdf_processing_counter.labels(status='success', cached='false').inc()
-
-        result = {
-            "status": "success",
-            "filename": file.filename,
-            "pages_processed": len(doc),
-            "total_lines": len(extracted_data),
-            "construction_items": construction_items,
-            "sample_data": extracted_data[:10],
-            "processing_time_seconds": processing_time,
-            "cached": False
-        }
-
-        # Cache the result
-        await set_cached_result(cache_key, result, ttl=7200)  # 2 hours cache
-        
-        return result
-
-    except Exception as e:
-        pdf_processing_counter.labels(status='error', cached='false').inc()
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/extract-excel")
-async def extract_excel_data(file: UploadFile = File(...)):
-    """Extract construction data from Excel files with caching and async processing"""
-    start_time = datetime.now()
-    
-    try:
-        content = await file.read()
-        
-        # Check cache first
-        cache_key = get_cache_key(content, "excel_extraction")
-        cached_result = await get_cached_result(cache_key, "excel_extraction")
-        if cached_result:
-            logger.info(f"Returning cached result for {file.filename}")
-            excel_processing_counter.labels(status='success', sheets='unknown').inc()
-            return cached_result
-
-        # Load Excel file
-        try:
-            excel_file = pd.ExcelFile(io.BytesIO(content))
-        except Exception as e:
-            logger.error(f"Invalid Excel file: {e}")
-            raise HTTPException(status_code=400, detail="Invalid Excel file")
-
-        sheets_data = {}
-        construction_items = []
-        sheet_count = len(excel_file.sheet_names)
-
-        for sheet_name in excel_file.sheet_names:
-            try:
-                # Read sheet into dataframe
-                df = pd.read_excel(excel_file, sheet_name=sheet_name)
-
-                if not df.empty:
-                    logger.info(f"First row: {df.iloc[0].to_dict()}")
-
-                # Find construction-related columns
-                column_mapping = {}
-                
-                # FIRST: Check if this is CAD export data (has Handle, Color, Linetype columns)
-                cad_columns = ['Handle', 'ParentID', 'Color', 'Linetype', 'Lineweight']
-                has_cad_data = sum(1 for col in cad_columns if col in df.columns) >= 3
-                
-                if has_cad_data and 'Name' in df.columns:
-                    # This is CAD export - use Name column for elements
-                    column_mapping['material'] = 'Name'
-                    # Map CAD geometric columns
-                    if 'Area' in df.columns:
-                        column_mapping['area'] = 'Area'
-                    if 'Length' in df.columns:
-                        column_mapping['length'] = 'Length'
-                    if 'Perimeter' in df.columns:
-                        column_mapping['perimeter'] = 'Perimeter'
-                    if 'Radius' in df.columns:
-                        column_mapping['radius'] = 'Radius'
-                    logger.info(f"Detected CAD export format, using 'Name' column and geometric data: {list(column_mapping.keys())}")
-                else:
-                    # Standard Excel - search for familiar column names
-                    for col in df.columns:
-                        col_str = str(col).lower()
-                        # Material/element name columns
-                        if 'material' in col_str or 'item' in col_str or 'element' in col_str or 'materjal' in col_str or 'kirjeldus' in col_str or 'nimetus' in col_str:
-                            if 'material' not in column_mapping:
-                                column_mapping['material'] = col
-                        # Description can also be material name
-                        if 'description' in col_str and 'material' not in column_mapping:
-                            column_mapping['material'] = col
-                        if 'quantity' in col_str or 'amount' in col_str or 'qty' in col_str or 'count' in col_str or 'kogus' in col_str or 'maht' in col_str:
-                            column_mapping['quantity'] = col
-                        if col_str == 'unit' or 'ühik' in col_str or 'mõõt' in col_str:
-                            column_mapping['unit'] = col
-                        if 'price' in col_str or 'cost' in col_str or 'hind' in col_str or 'maksumus' in col_str:
-                            column_mapping['price'] = col
-                
-                logger.info(f"Column mapping for '{sheet_name}': {column_mapping}")
-
-                # Extract construction items if material column found
-                if 'material' in column_mapping:
-                    for _, row in df.iterrows():
-                        material = row[column_mapping['material']]
-                        
-                        # Skip empty rows
-                        if pd.isna(material) or material is None or str(material).strip() == "":
-                            continue
-                            
-                        quantity = row.get(column_mapping.get('quantity'))
-                        unit = row.get(column_mapping.get('unit'), 'unit')
-                        price = row.get(column_mapping.get('price'))
-                        
-                        # Extract CAD geometric data
-                        area = row.get(column_mapping.get('area'))
-                        length = row.get(column_mapping.get('length'))
-                        perimeter = row.get(column_mapping.get('perimeter'))
-                        radius = row.get(column_mapping.get('radius'))
-
-                        # Safely convert types
-                        def safe_float(val):
-                            try:
-                                if val is not None and not pd.isna(val):
-                                    return float(val)
-                            except (ValueError, TypeError):
-                                pass
-                            return None
-                        
-                        quantity = safe_float(quantity) or 0.0
-                        price = safe_float(price) or 0.0
-                        area = safe_float(area)
-                        length = safe_float(length)
-                        perimeter = safe_float(perimeter)
-                        radius = safe_float(radius)
-
-                        item = {
-                            'material': str(material),
-                            'quantity': quantity,
-                            'unit': str(unit) if unit is not None else 'unit',
-                            'price': price,
-                            'sheet': sheet_name
-                        }
-                        
-                        # Add CAD geometric data if available
-                        if area is not None:
-                            item['area'] = round(area, 2)
-                        if length is not None:
-                            item['length'] = round(length, 2)
-                        if perimeter is not None:
-                            item['perimeter'] = round(perimeter, 2)
-                        if radius is not None:
-                            item['radius'] = round(radius, 2)
-                            
-                        construction_items.append(item)
-
-                # Convert dataframe to simple dict for preview (10 rows max)
-                df = df.head(10).astype(str).where(pd.notnull(df), None)
-                
-                sheets_data[sheet_name] = {
-                    "shape": df.shape,
-                    "columns": df.columns.tolist(),
-                    "construction_columns": list(column_mapping.values()),
-                    "sample_data": df.to_dict('records')
-                }
-                
-            except Exception as e:
-                logger.warning(f"Error processing sheet {sheet_name}: {e}")
-                sheets_data[sheet_name] = {"error": str(e)}
-        
-        # Record metrics
-        processing_time = (datetime.now() - start_time).total_seconds()
-        document_processing_time.labels(
-            document_type='excel',
-            operation='extraction'
-        ).observe(processing_time)
-        
-        excel_processing_counter.labels(
-            status='success',
-            sheets=str(sheet_count)
-        ).inc()
-
-        # Deduplicate CAD elements - group by material name and aggregate quantities
-        if construction_items:
-            # Check if this looks like CAD data (many duplicate names, no quantities)
-            material_counts = {}
-            total_qty_zero = sum(1 for item in construction_items if item.get('quantity', 0) == 0)
-            is_cad_data = total_qty_zero > len(construction_items) * 0.8  # 80%+ have no quantity
-            
-            if is_cad_data:
-                logger.info(f"Detected CAD layer data, deduplicating {len(construction_items)} items")
-                for item in construction_items:
-                    mat_name = item['material']
-                    # Clean up CAD layer names (remove prefixes like "New_")
-                    clean_name = mat_name.replace('New_', '').replace('_Pen_No_', ' ').strip()
-                    # Further cleanup - extract meaningful part
-                    if '__' in clean_name:
-                        clean_name = clean_name.split('__')[0]
-                    clean_name = clean_name.strip('_ ')
-                    
-                    if clean_name:
-                        if clean_name not in material_counts:
-                            material_counts[clean_name] = {
-                                'material': clean_name,
-                                'quantity': 0,
-                                'unit': 'item',
-                                'price': 0.0,
-                                'sheet': item['sheet'],
-                                'total_area': 0.0,
-                                'total_length': 0.0,
-                                'total_perimeter': 0.0,
-                                'element_count': 0
-                            }
-                        material_counts[clean_name]['quantity'] += 1
-                        material_counts[clean_name]['element_count'] += 1
-                        
-                        # Aggregate geometric data
-                        if 'area' in item:
-                            material_counts[clean_name]['total_area'] += item['area']
-                        if 'length' in item:
-                            material_counts[clean_name]['total_length'] += item['length']
-                        if 'perimeter' in item:
-                            material_counts[clean_name]['total_perimeter'] += item['perimeter']
-                
-                # Convert aggregated data to final format with smart units
-                final_items = []
-                for name, data in material_counts.items():
-                    item = {
-                        'material': name,
-                        'sheet': data['sheet'],
-                        'price': 0.0
-                    }
-                    
-                    # Determine element category and default price based on layer name
-                    name_lower = name.lower()
-                    
-                    # Category detection and default pricing (Estonian construction avg prices)
-                    if any(k in name_lower for k in ['wall', 'sein', 'seinad']):
-                        category = 'walls'
-                        price_per_m2 = 85.0  # €/m² for wall work
-                    elif any(k in name_lower for k in ['floor', 'põrand', 'vahelagi']):
-                        category = 'floors'
-                        price_per_m2 = 65.0  # €/m² for flooring
-                    elif any(k in name_lower for k in ['roof', 'katus', 'lagi']):
-                        category = 'roofing'
-                        price_per_m2 = 95.0  # €/m² for roofing
-                    elif any(k in name_lower for k in ['door', 'uks', 'uksed']):
-                        category = 'doors'
-                        price_per_item = 450.0  # €/item for doors
-                    elif any(k in name_lower for k in ['window', 'aken', 'akna']):
-                        category = 'windows'
-                        price_per_item = 380.0  # €/item for windows
-                    elif any(k in name_lower for k in ['pipe', 'toru', 'kanal']):
-                        category = 'piping'
-                        price_per_m = 45.0  # €/m for pipes
-                    elif any(k in name_lower for k in ['wire', 'kaabel', 'elekter', 'electric']):
-                        category = 'electrical'
-                        price_per_m = 25.0  # €/m for electrical
-                    elif any(k in name_lower for k in ['fill', 'täide', 'hatch']):
-                        category = 'areas'
-                        price_per_m2 = 15.0  # €/m² for general areas
-                    elif any(k in name_lower for k in ['text', 'dim', 'annot', 'symbol']):
-                        category = 'annotations'
-                        price_per_m2 = 0.0  # No cost for annotations
-                    else:
-                        category = 'general'
-                        price_per_m2 = 25.0  # Default €/m² for general elements
-                    
-                    # Choose best quantity/unit based on available data and assign price
-                    if data['total_area'] > 0:
-                        item['quantity'] = round(data['total_area'] / 1000000, 2)  # Convert to m²
-                        item['unit'] = 'm²'
-                        item['total_area_mm2'] = round(data['total_area'], 2)
-                        # Apply area-based pricing
-                        unit_price = price_per_m2 if 'price_per_m2' in dir() else 25.0
-                        item['price'] = round(item['quantity'] * unit_price, 2)
-                        item['unit_price'] = unit_price
-                    elif data['total_length'] > 0:
-                        item['quantity'] = round(data['total_length'] / 1000, 2)  # Convert to m
-                        item['unit'] = 'm'
-                        item['total_length_mm'] = round(data['total_length'], 2)
-                        # Apply length-based pricing
-                        unit_price = price_per_m if 'price_per_m' in dir() else 35.0
-                        item['price'] = round(item['quantity'] * unit_price, 2)
-                        item['unit_price'] = unit_price
-                    else:
-                        item['quantity'] = data['element_count']
-                        item['unit'] = 'item'
-                        # Apply item-based pricing
-                        unit_price = price_per_item if 'price_per_item' in dir() else 50.0
-                        item['price'] = round(item['quantity'] * unit_price, 2)
-                        item['unit_price'] = unit_price
-                    
-                    item['element_count'] = data['element_count']
-                    item['category'] = category
-                    final_items.append(item)
-                
-                construction_items = final_items
-                logger.info(f"Deduplicated to {len(construction_items)} unique elements with aggregated quantities")
-
-        # Persist extracted materials to the materials database
-        if construction_items and API_VERSIONING_AVAILABLE:
-            from routers.v1 import materials as mat_router
-            saved_count = 0
-            for item in construction_items:
-                mat_router.material_counter += 1
-                now = datetime.now()
-                new_material = {
-                    "id": mat_router.material_counter,
-                    "name": item.get('material', 'Unknown'),
-                    "quantity": float(item.get('quantity', 0)),
-                    "unit": item.get('unit', 'unit'),
-                    "price": float(item.get('price', 0)),
-                    "supplier": None,
-                    "project_id": None,
-                    "category": item.get('category', 'extracted'),
-                    "source_file": file.filename,
-                    "created_at": now,
-                    "updated_at": now
-                }
-                mat_router.materials_db[mat_router.material_counter] = new_material
-                saved_count += 1
-            logger.info(f"Saved {saved_count} materials to database from {file.filename}")
-
-        return {
-            "status": "success", 
-            "filename": file.filename,
-            "sheets": list(excel_file.sheet_names),
-            "sheets_data": sheets_data,
-            "construction_items": construction_items,
-            "materials_saved": len(construction_items) if construction_items else 0,
-            "processing_time_seconds": processing_time
-        }
-
-    except Exception as e:
-        excel_processing_counter.labels(status='error', sheets='0').inc()
-        raise HTTPException(status_code=500, detail=str(e))
+# Extraction endpoints moved to routers/v1/extraction.py
+app.include_router(extraction_router)
 
 # Load Estonian Material Cost Database from JSON file
 try:
