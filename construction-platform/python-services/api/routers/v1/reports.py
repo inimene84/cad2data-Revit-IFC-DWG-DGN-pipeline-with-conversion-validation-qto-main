@@ -46,6 +46,7 @@ class ReportCreate(BaseModel):
     type: str = "boq"  # boq, cost_estimate, materials_list
     include_vat: bool = True
     region: str = "Tartu"
+    materials: Optional[List[dict]] = None  # Materials with costs from extraction
 
 
 class ReportResponse(BaseModel):
@@ -107,8 +108,28 @@ async def generate_report(report_data: ReportCreate):
     # Calculate VAT (Estonian VAT rate from config)
     vat_rate = VAT_RATE if report_data.include_vat else 0
     
-    # Sample total cost calculation (in real implementation, fetch from materials)
-    base_cost = 15000.00  # Placeholder
+    # Calculate cost from materials if provided
+    base_cost = 0.0
+    materials_list = []
+    if report_data.materials:
+        for m in report_data.materials:
+            # Get price from material data
+            price = float(m.get('estimated_price') or m.get('price') or m.get('cost') or 0)
+            quantity = float(m.get('quantity') or 1)
+            item_cost = price * quantity
+            base_cost += item_cost
+            materials_list.append({
+                'name': m.get('name') or m.get('material') or 'Unknown',
+                'quantity': quantity,
+                'unit': m.get('unit', 'unit'),
+                'unit_price': price,
+                'total_price': item_cost
+            })
+    
+    # If no materials or zero cost, use a fallback
+    if base_cost == 0:
+        base_cost = 0.0  # No placeholder - show actual zero
+        
     vat_amount = base_cost * vat_rate
     total_cost = base_cost + vat_amount
     
@@ -123,6 +144,8 @@ async def generate_report(report_data: ReportCreate):
         "vat_amount": round(vat_amount, 2),
         "region": report_data.region,
         "include_vat": report_data.include_vat,
+        "materials": materials_list,
+        "materials_count": len(materials_list),
         "file_path": None,
         "created_at": now
     }
