@@ -709,7 +709,16 @@ async def extract_excel_data(file: UploadFile = File(...)):
                     has_cad_data = any(col in df.columns for col in cad_columns)
                     if has_cad_data and 'Name' in df.columns:
                         column_mapping['material'] = 'Name'
-                        logger.info(f"Detected CAD export format, using 'Name' column for elements")
+                        # Map CAD geometric columns
+                        if 'Area' in df.columns:
+                            column_mapping['area'] = 'Area'
+                        if 'Length' in df.columns:
+                            column_mapping['length'] = 'Length'
+                        if 'Perimeter' in df.columns:
+                            column_mapping['perimeter'] = 'Perimeter'
+                        if 'Radius' in df.columns:
+                            column_mapping['radius'] = 'Radius'
+                        logger.info(f"Detected CAD export format, using 'Name' column and geometric data: {list(column_mapping.keys())}")
                 
                 logger.info(f"Column mapping for '{sheet_name}': {column_mapping}")
 
@@ -725,27 +734,48 @@ async def extract_excel_data(file: UploadFile = File(...)):
                         quantity = row.get(column_mapping.get('quantity'))
                         unit = row.get(column_mapping.get('unit'), 'unit')
                         price = row.get(column_mapping.get('price'))
+                        
+                        # Extract CAD geometric data
+                        area = row.get(column_mapping.get('area'))
+                        length = row.get(column_mapping.get('length'))
+                        perimeter = row.get(column_mapping.get('perimeter'))
+                        radius = row.get(column_mapping.get('radius'))
 
                         # Safely convert types
-                        try:
-                            if quantity is not None:
-                                quantity = float(quantity)
-                        except (ValueError, TypeError):
-                            quantity = 0.0
-                            
-                        try:
-                            if price is not None:
-                                price = float(price)
-                        except (ValueError, TypeError):
-                            price = 0.0
+                        def safe_float(val):
+                            try:
+                                if val is not None and not pd.isna(val):
+                                    return float(val)
+                            except (ValueError, TypeError):
+                                pass
+                            return None
+                        
+                        quantity = safe_float(quantity) or 0.0
+                        price = safe_float(price) or 0.0
+                        area = safe_float(area)
+                        length = safe_float(length)
+                        perimeter = safe_float(perimeter)
+                        radius = safe_float(radius)
 
-                        construction_items.append({
+                        item = {
                             'material': str(material),
-                            'quantity': quantity if quantity is not None else 0.0,
+                            'quantity': quantity,
                             'unit': str(unit) if unit is not None else 'unit',
-                            'price': price if price is not None else 0.0,
+                            'price': price,
                             'sheet': sheet_name
-                        })
+                        }
+                        
+                        # Add CAD geometric data if available
+                        if area is not None:
+                            item['area'] = round(area, 2)
+                        if length is not None:
+                            item['length'] = round(length, 2)
+                        if perimeter is not None:
+                            item['perimeter'] = round(perimeter, 2)
+                        if radius is not None:
+                            item['radius'] = round(radius, 2)
+                            
+                        construction_items.append(item)
 
                 # Convert dataframe to simple dict for preview (10 rows max)
                 df = df.head(10).astype(str).where(pd.notnull(df), None)
@@ -773,7 +803,7 @@ async def extract_excel_data(file: UploadFile = File(...)):
             sheets=str(sheet_count)
         ).inc()
 
-        # Deduplicate CAD elements - group by material name and count
+        # Deduplicate CAD elements - group by material name and aggregate quantities
         if construction_items:
             # Check if this looks like CAD data (many duplicate names, no quantities)
             material_counts = {}
@@ -786,6 +816,11 @@ async def extract_excel_data(file: UploadFile = File(...)):
                     mat_name = item['material']
                     # Clean up CAD layer names (remove prefixes like "New_")
                     clean_name = mat_name.replace('New_', '').replace('_Pen_No_', ' ').strip()
+                    # Further cleanup - extract meaningful part
+                    if '__' in clean_name:
+                        clean_name = clean_name.split('__')[0]
+                    clean_name = clean_name.strip('_ ')
+                    
                     if clean_name:
                         if clean_name not in material_counts:
                             material_counts[clean_name] = {
@@ -793,12 +828,50 @@ async def extract_excel_data(file: UploadFile = File(...)):
                                 'quantity': 0,
                                 'unit': 'item',
                                 'price': 0.0,
-                                'sheet': item['sheet']
+                                'sheet': item['sheet'],
+                                'total_area': 0.0,
+                                'total_length': 0.0,
+                                'total_perimeter': 0.0,
+                                'element_count': 0
                             }
                         material_counts[clean_name]['quantity'] += 1
+                        material_counts[clean_name]['element_count'] += 1
+                        
+                        # Aggregate geometric data
+                        if 'area' in item:
+                            material_counts[clean_name]['total_area'] += item['area']
+                        if 'length' in item:
+                            material_counts[clean_name]['total_length'] += item['length']
+                        if 'perimeter' in item:
+                            material_counts[clean_name]['total_perimeter'] += item['perimeter']
                 
-                construction_items = list(material_counts.values())
-                logger.info(f"Deduplicated to {len(construction_items)} unique elements")
+                # Convert aggregated data to final format with smart units
+                final_items = []
+                for name, data in material_counts.items():
+                    item = {
+                        'material': name,
+                        'sheet': data['sheet'],
+                        'price': 0.0
+                    }
+                    
+                    # Choose best quantity/unit based on available data
+                    if data['total_area'] > 0:
+                        item['quantity'] = round(data['total_area'] / 1000000, 2)  # Convert to m²
+                        item['unit'] = 'm²'
+                        item['total_area_mm2'] = round(data['total_area'], 2)
+                    elif data['total_length'] > 0:
+                        item['quantity'] = round(data['total_length'] / 1000, 2)  # Convert to m
+                        item['unit'] = 'm'
+                        item['total_length_mm'] = round(data['total_length'], 2)
+                    else:
+                        item['quantity'] = data['element_count']
+                        item['unit'] = 'item'
+                    
+                    item['element_count'] = data['element_count']
+                    final_items.append(item)
+                
+                construction_items = final_items
+                logger.info(f"Deduplicated to {len(construction_items)} unique elements with aggregated quantities")
 
         return {
             "status": "success", 
