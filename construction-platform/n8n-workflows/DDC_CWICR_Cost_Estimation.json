@@ -1,0 +1,301 @@
+{
+    "name": "DDC_CWICR_Cost_Estimation_v2",
+    "nodes": [
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                300,
+                300
+            ],
+            "id": "manual-trigger",
+            "name": "Start Workflow"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "api-url",
+                            "name": "api_url",
+                            "value": "http://construction-api:8000",
+                            "type": "string"
+                        },
+                        {
+                            "id": "language",
+                            "name": "language",
+                            "value": "en",
+                            "type": "string"
+                        },
+                        {
+                            "id": "country",
+                            "name": "country",
+                            "value": "Estonia",
+                            "type": "string"
+                        },
+                        {
+                            "id": "currency",
+                            "name": "currency",
+                            "value": "EUR",
+                            "type": "string"
+                        },
+                        {
+                            "id": "vat-rate",
+                            "name": "vat_rate",
+                            "value": "0.22",
+                            "type": "number"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                500,
+                300
+            ],
+            "id": "setup-config",
+            "name": "Setup Configuration"
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "={{ $json.api_url }}/v1/vector/health",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                700,
+                200
+            ],
+            "id": "check-api-health",
+            "name": "Check API Health"
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "={{ $node['Setup Configuration'].json.api_url }}/v1/vector/collections",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                700,
+                400
+            ],
+            "id": "get-collections",
+            "name": "Get DDC Collections"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Define construction elements to search for pricing\n// This would typically come from an IFC/Excel file upload\nconst config = $node['Setup Configuration'].json;\n\nconst searchQueries = [\n  { query: 'concrete foundation', category: 'Foundation', quantity: 50, unit: 'm3' },\n  { query: 'reinforced concrete slab', category: 'Structure', quantity: 200, unit: 'm3' },\n  { query: 'brick masonry wall', category: 'Walls', quantity: 150, unit: 'm2' },\n  { query: 'steel reinforcement', category: 'Structure', quantity: 5000, unit: 'kg' },\n  { query: 'roof insulation mineral wool', category: 'Insulation', quantity: 300, unit: 'm2' },\n  { query: 'window installation double glazing', category: 'Windows', quantity: 25, unit: 'pcs' },\n  { query: 'door installation interior', category: 'Doors', quantity: 15, unit: 'pcs' },\n  { query: 'plaster coating interior walls', category: 'Finishing', quantity: 400, unit: 'm2' },\n  { query: 'floor tiling ceramic', category: 'Flooring', quantity: 100, unit: 'm2' },\n  { query: 'electrical wiring installation', category: 'MEP', quantity: 500, unit: 'm' }\n];\n\nreturn searchQueries.map(item => ({\n  json: {\n    ...item,\n    api_url: config.api_url,\n    language: config.language,\n    country: config.country,\n    currency: config.currency,\n    vat_rate: config.vat_rate\n  }\n}));"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                900,
+                300
+            ],
+            "id": "prepare-search-queries",
+            "name": "Prepare Search Queries"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{ $json.api_url }}/v1/vector/search",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"query\": \"{{ $json.query }}\",\n  \"language\": \"{{ $json.language }}\",\n  \"limit\": 3\n}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1100,
+                300
+            ],
+            "id": "search-ddc-database",
+            "name": "Search DDC CWICR Database"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Process DDC search results and calculate costs\nconst items = $input.all();\nconst results = [];\n\nitems.forEach((item, index) => {\n  const inputData = $node['Prepare Search Queries'].json;\n  const searchResults = item.json.results || [];\n  const query = item.json.query || inputData.query;\n  \n  // Get best match from DDC database\n  let bestMatch = null;\n  let unitPrice = 0;\n  let laborHours = 0;\n  let ddcRateCode = '';\n  let ddcName = '';\n  let confidence = 0;\n  \n  if (searchResults.length > 0) {\n    bestMatch = searchResults[0];\n    unitPrice = bestMatch.price_median || bestMatch.price_min || 0;\n    laborHours = bestMatch.labor_hours || 0;\n    ddcRateCode = bestMatch.rate_code || '';\n    ddcName = bestMatch.name || '';\n    confidence = Math.round((bestMatch.score || 0) * 100);\n  }\n  \n  // Get original request data\n  const originalQuery = $node['Prepare Search Queries'].item(index)?.json || {};\n  const quantity = originalQuery.quantity || 1;\n  const category = originalQuery.category || 'Unknown';\n  const unit = originalQuery.unit || 'unit';\n  const vatRate = originalQuery.vat_rate || 0.22;\n  \n  // Calculate total cost\n  const totalNet = unitPrice * quantity;\n  const vatAmount = totalNet * vatRate;\n  const totalGross = totalNet + vatAmount;\n  \n  results.push({\n    json: {\n      category: category,\n      search_query: query,\n      quantity: quantity,\n      unit: unit,\n      ddc_rate_code: ddcRateCode,\n      ddc_name: ddcName,\n      unit_price: Math.round(unitPrice * 100) / 100,\n      labor_hours: laborHours,\n      total_net: Math.round(totalNet * 100) / 100,\n      vat_rate: vatRate,\n      vat_amount: Math.round(vatAmount * 100) / 100,\n      total_gross: Math.round(totalGross * 100) / 100,\n      confidence_percent: confidence,\n      alternatives: searchResults.slice(1).map(r => ({\n        name: r.name,\n        price: r.price_median,\n        score: Math.round((r.score || 0) * 100)\n      }))\n    }\n  });\n});\n\nreturn results;"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1300,
+                300
+            ],
+            "id": "process-ddc-results",
+            "name": "Process DDC Results"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Generate comprehensive cost estimation report\nconst items = $input.all();\nconst config = $node['Setup Configuration'].json;\n\nlet totalNet = 0;\nlet totalVat = 0;\nlet totalGross = 0;\nlet totalLaborHours = 0;\nlet avgConfidence = 0;\n\nconst costByCategory = {};\n\nitems.forEach(item => {\n  const data = item.json;\n  totalNet += data.total_net || 0;\n  totalVat += data.vat_amount || 0;\n  totalGross += data.total_gross || 0;\n  totalLaborHours += (data.labor_hours || 0) * (data.quantity || 0);\n  avgConfidence += data.confidence_percent || 0;\n  \n  const category = data.category || 'Other';\n  if (!costByCategory[category]) {\n    costByCategory[category] = { count: 0, cost: 0 };\n  }\n  costByCategory[category].count++;\n  costByCategory[category].cost += data.total_gross || 0;\n});\n\navgConfidence = Math.round(avgConfidence / items.length);\n\n// Sort items by cost (highest first)\nconst sortedItems = items.sort((a, b) => (b.json.total_gross || 0) - (a.json.total_gross || 0));\n\n// Generate HTML report\nconst htmlReport = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>DDC CWICR Cost Estimation Report</title>\n    <style>\n        * { margin: 0; padding: 0; box-sizing: border-box; }\n        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; padding: 40px; color: #fff; }\n        .container { max-width: 1400px; margin: 0 auto; }\n        .header { text-align: center; margin-bottom: 40px; }\n        .header h1 { font-size: 2.5em; background: linear-gradient(90deg, #ff6b6b, #feca57); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }\n        .header p { color: #a0aec0; }\n        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px; }\n        .metric-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 16px; padding: 24px; border: 1px solid rgba(255,255,255,0.1); }\n        .metric-value { font-size: 2em; font-weight: bold; background: linear-gradient(90deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }\n        .metric-label { color: #a0aec0; margin-top: 8px; }\n        .section { background: rgba(255,255,255,0.03); border-radius: 16px; padding: 30px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05); }\n        .section h2 { color: #fff; margin-bottom: 20px; font-size: 1.4em; }\n        table { width: 100%; border-collapse: collapse; }\n        th, td { padding: 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }\n        th { background: rgba(102, 126, 234, 0.2); color: #667eea; font-weight: 600; }\n        tr:hover { background: rgba(255,255,255,0.03); }\n        .high-cost { color: #ff6b6b; font-weight: bold; }\n        .confidence-high { color: #10b981; }\n        .confidence-medium { color: #fbbf24; }\n        .confidence-low { color: #ef4444; }\n        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.85em; }\n        .badge-primary { background: rgba(102, 126, 234, 0.2); color: #667eea; }\n        .footer { text-align: center; margin-top: 40px; color: #a0aec0; font-size: 0.9em; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>🏗️ DDC CWICR Cost Estimation</h1>\n            <p>Generated on ${new Date().toLocaleString()} | Country: ${config.country} | Database: DDC CWICR (${config.language.toUpperCase()})</p>\n        </div>\n        \n        <div class=\"summary-grid\">\n            <div class=\"metric-card\">\n                <div class=\"metric-value\">€${totalGross.toLocaleString()}</div>\n                <div class=\"metric-label\">Total Cost (incl. VAT)</div>\n            </div>\n            <div class=\"metric-card\">\n                <div class=\"metric-value\">€${totalNet.toLocaleString()}</div>\n                <div class=\"metric-label\">Net Cost (excl. VAT)</div>\n            </div>\n            <div class=\"metric-card\">\n                <div class=\"metric-value\">${items.length}</div>\n                <div class=\"metric-label\">Work Items</div>\n            </div>\n            <div class=\"metric-card\">\n                <div class=\"metric-value\">${totalLaborHours.toLocaleString()} h</div>\n                <div class=\"metric-label\">Est. Labor Hours</div>\n            </div>\n            <div class=\"metric-card\">\n                <div class=\"metric-value\">${avgConfidence}%</div>\n                <div class=\"metric-label\">Avg. Match Confidence</div>\n            </div>\n        </div>\n        \n        <div class=\"section\">\n            <h2>📊 Cost Breakdown by Category</h2>\n            <table>\n                <thead>\n                    <tr>\n                        <th>Category</th>\n                        <th>Items</th>\n                        <th>Total Cost (€)</th>\n                        <th>% of Total</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    ${Object.entries(costByCategory).sort((a, b) => b[1].cost - a[1].cost).map(([category, data]) => `\n                        <tr>\n                            <td>${category}</td>\n                            <td>${data.count}</td>\n                            <td class=\"${data.cost > totalGross * 0.2 ? 'high-cost' : ''}\">€${data.cost.toLocaleString()}</td>\n                            <td>${((data.cost / totalGross) * 100).toFixed(1)}%</td>\n                        </tr>\n                    `).join('')}\n                </tbody>\n            </table>\n        </div>\n        \n        <div class=\"section\">\n            <h2>📋 Detailed Work Items</h2>\n            <table>\n                <thead>\n                    <tr>\n                        <th>Category</th>\n                        <th>DDC Work Item</th>\n                        <th>Qty</th>\n                        <th>Unit Price</th>\n                        <th>Total (€)</th>\n                        <th>Match %</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    ${sortedItems.map(item => {\n                        const d = item.json;\n                        const confClass = d.confidence_percent >= 45 ? 'confidence-high' : d.confidence_percent >= 35 ? 'confidence-medium' : 'confidence-low';\n                        return `\n                            <tr>\n                                <td><span class=\"badge badge-primary\">${d.category}</span></td>\n                                <td>\n                                    <strong>${d.ddc_name || d.search_query}</strong><br>\n                                    <small style=\"color: #a0aec0\">${d.ddc_rate_code}</small>\n                                </td>\n                                <td>${d.quantity} ${d.unit}</td>\n                                <td>€${d.unit_price.toLocaleString()}</td>\n                                <td class=\"${d.total_gross > totalGross * 0.15 ? 'high-cost' : ''}\">€${d.total_gross.toLocaleString()}</td>\n                                <td class=\"${confClass}\">${d.confidence_percent}%</td>\n                            </tr>\n                        `;\n                    }).join('')}\n                </tbody>\n            </table>\n        </div>\n        \n        <div class=\"footer\">\n            <p>Powered by DDC CWICR Database | 55,000+ construction work items</p>\n            <p>VAT Rate: ${(config.vat_rate * 100)}% | This is an automated estimate - professional review recommended</p>\n        </div>\n    </div>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    total_net: Math.round(totalNet * 100) / 100,\n    total_vat: Math.round(totalVat * 100) / 100,\n    total_gross: Math.round(totalGross * 100) / 100,\n    total_labor_hours: Math.round(totalLaborHours),\n    work_items_count: items.length,\n    avg_confidence: avgConfidence,\n    cost_by_category: costByCategory,\n    country: config.country,\n    currency: config.currency,\n    vat_rate: config.vat_rate,\n    database: 'DDC CWICR',\n    language: config.language,\n    items: sortedItems.map(i => i.json)\n  },\n  binary: {\n    report: {\n      data: Buffer.from(htmlReport).toString('base64'),\n      mimeType: 'text/html',\n      fileName: 'ddc_cost_estimation_report.html'\n    }\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1500,
+                300
+            ],
+            "id": "generate-report",
+            "name": "Generate Cost Report"
+        },
+        {
+            "parameters": {
+                "url": "={{ $node['Setup Configuration'].json.api_url }}/v1/reports",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"name\": \"DDC CWICR Cost Estimate - {{ $now.format('YYYY-MM-DD HH:mm') }}\",\n  \"total_cost\": {{ $json.total_gross }},\n  \"items_count\": {{ $json.work_items_count }},\n  \"data\": {{ JSON.stringify($json) }}\n}",
+                "options": {
+                    "timeout": 10000
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1700,
+                400
+            ],
+            "id": "save-to-api",
+            "name": "Save Report to API",
+            "continueOnFail": true
+        },
+        {
+            "parameters": {
+                "jsCode": "// Final summary output\nconst reportData = $input.first().json;\n\nconsole.log('\\n========================================');\nconsole.log('  DDC CWICR COST ESTIMATION COMPLETE');\nconsole.log('========================================');\nconsole.log(`\\n💰 Total Cost (incl. VAT): €${reportData.total_gross.toLocaleString()}`);\nconsole.log(`📋 Work Items: ${reportData.work_items_count}`);\nconsole.log(`⏱️ Est. Labor Hours: ${reportData.total_labor_hours}`);\nconsole.log(`📊 Avg. Match Confidence: ${reportData.avg_confidence}%`);\nconsole.log(`\\n🗄️ Database: ${reportData.database} (${reportData.language.toUpperCase()})`);\nconsole.log(`🌍 Country: ${reportData.country}`);\nconsole.log(`💱 VAT Rate: ${(reportData.vat_rate * 100)}%`);\nconsole.log('\\n✅ Report generated successfully!');\nconsole.log('========================================\\n');\n\nreturn [{ json: reportData }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1700,
+                200
+            ],
+            "id": "final-summary",
+            "name": "Final Summary"
+        }
+    ],
+    "connections": {
+        "Start Workflow": {
+            "main": [
+                [
+                    {
+                        "node": "Setup Configuration",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Setup Configuration": {
+            "main": [
+                [
+                    {
+                        "node": "Check API Health",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Get DDC Collections",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Prepare Search Queries",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare Search Queries": {
+            "main": [
+                [
+                    {
+                        "node": "Search DDC CWICR Database",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Search DDC CWICR Database": {
+            "main": [
+                [
+                    {
+                        "node": "Process DDC Results",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Process DDC Results": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Cost Report",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Cost Report": {
+            "main": [
+                [
+                    {
+                        "node": "Final Summary",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Save Report to API",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "2.0.0",
+    "meta": {
+        "instanceId": "ddc-cwicr-integration"
+    },
+    "id": "DDC_CWICR_Cost_Estimation",
+    "tags": [
+        "cost-estimation",
+        "ddc-cwicr",
+        "construction"
+    ]
+}
