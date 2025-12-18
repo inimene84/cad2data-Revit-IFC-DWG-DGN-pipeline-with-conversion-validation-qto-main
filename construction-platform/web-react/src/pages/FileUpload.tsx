@@ -24,6 +24,8 @@ import {
   Select,
   MenuItem,
   FormControl,
+  FormControlLabel,
+  Switch,
   InputLabel,
   CircularProgress,
 } from '@mui/material';
@@ -64,9 +66,13 @@ const FileUpload = () => {
   const [processing, setProcessing] = useState(false);
   const [estimating, setEstimating] = useState(false);
   const [costEstimate, setCostEstimate] = useState<any>(null);
+  const [useN8nWorkflow, setUseN8nWorkflow] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
   const steps = ['Select Files', 'Configure Processing', 'Process & Estimate'];
+
+  // n8n webhook URL for cost estimation
+  const N8N_WEBHOOK_URL = 'https://n8n.construction.thorspark.cloud/webhook/cost-estimation';
 
   const countries = [
     { code: 'EE', name: 'Estonia', vat: 24 },
@@ -180,33 +186,56 @@ const FileUpload = () => {
   const runCostEstimation = async (materials: any[]) => {
     setEstimating(true);
     try {
-      const response = await api.post('/v1/vector/estimate', {
-        materials: materials.map(m => ({
-          name: m.name || m.description || m.material,
-          quantity: parseFloat(m.quantity) || 1,
-          unit: m.unit || 'unit',
-          category: m.category
-        })),
-        language: 'en',
-        country: country
-      });
+      const materialsPayload = materials.map(m => ({
+        name: m.name || m.description || m.material,
+        quantity: parseFloat(m.quantity) || 1,
+        unit: m.unit || 'unit',
+        category: m.category
+      }));
 
-      setCostEstimate(response.data);
+      let responseData;
+
+      if (useN8nWorkflow) {
+        // Use n8n webhook for cost estimation
+        enqueueSnackbar('Using n8n workflow for estimation...', { variant: 'info' });
+        const response = await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            project_name: projectName || 'Unnamed Project',
+            country: country,
+            materials: materialsPayload,
+            language: 'en'
+          })
+        });
+        responseData = await response.json();
+      } else {
+        // Use direct API call
+        const response = await api.post('/v1/vector/estimate', {
+          materials: materialsPayload,
+          language: 'en',
+          country: country
+        });
+        responseData = response.data;
+      }
+
+      setCostEstimate(responseData);
 
       // Auto-save to reports
       try {
         await api.post('/v1/reports', {
           name: `${projectName || 'Unnamed Project'} - Cost Estimate`,
-          total_cost: response.data.total_gross,
-          items_count: response.data.items_count,
-          data: response.data
+          total_cost: responseData.total_gross,
+          items_count: responseData.items_count,
+          data: responseData,
+          source: useN8nWorkflow ? 'n8n_workflow' : 'api'
         });
         enqueueSnackbar('Cost estimate saved to reports', { variant: 'success' });
       } catch (e) {
         console.error('Failed to save report:', e);
       }
 
-      enqueueSnackbar(`Cost estimation complete: €${response.data.total_gross?.toLocaleString()}`, { variant: 'success' });
+      enqueueSnackbar(`Cost estimation complete: €${responseData.total_gross?.toLocaleString()}`, { variant: 'success' });
     } catch (error: any) {
       console.error('Cost estimation error:', error);
       enqueueSnackbar('Cost estimation failed', { variant: 'error' });
@@ -487,8 +516,22 @@ const FileUpload = () => {
                     </Select>
                   </FormControl>
 
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    {files.length} file(s) will be processed with DDC CWICR cost estimation ({countries.find(c => c.code === country)?.name} VAT)
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={useN8nWorkflow}
+                        onChange={(e) => setUseN8nWorkflow(e.target.checked)}
+                        color="secondary"
+                      />
+                    }
+                    label="Use n8n Workflow (advanced)"
+                    sx={{ mb: 2 }}
+                  />
+
+                  <Alert severity={useN8nWorkflow ? "secondary" : "info"} sx={{ mb: 2 }}>
+                    {files.length} file(s) will be processed with DDC CWICR cost estimation
+                    {useN8nWorkflow ? ' via n8n workflow' : ' via API'}
+                    ({countries.find(c => c.code === country)?.name} {countries.find(c => c.code === country)?.vat}% VAT)
                   </Alert>
 
                   <Paper variant="outlined" sx={{ p: 2 }}>
