@@ -157,13 +157,14 @@ async def search_work_items(request: CostSearchRequest):
         
         query_filter = Filter(must=must_conditions) if must_conditions else None
         
-        # Search QDRANT
-        results = qdrant.search(
+        # Search QDRANT using query_points (new API)
+        search_result = qdrant.query_points(
             collection_name=collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             limit=request.limit,
             query_filter=query_filter
         )
+        results = search_result.points
         
         # Transform results
         work_items = []
