@@ -1,0 +1,183 @@
+{
+    "name": "DDC_CWICR_Webhook_Estimation",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "cost-estimation",
+                "responseMode": "responseNode",
+                "options": {
+                    "allowUnauthorizedCerts": true
+                }
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                200,
+                400
+            ],
+            "id": "webhook-trigger",
+            "name": "Receive Materials",
+            "webhookId": "cost-estimation"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Extract and validate input from webhook\nconst body = $input.first().json.body || $input.first().json;\n\nconst materials = body.materials || [];\nconst projectName = body.project_name || 'Unnamed Project';\nconst country = body.country || 'EE';\nconst language = body.language || 'en';\n\nif (!materials.length) {\n  throw new Error('No materials provided');\n}\n\nconsole.log(`Received ${materials.length} materials for estimation`);\nconsole.log(`Project: ${projectName}, Country: ${country}`);\n\nreturn [{\n  json: {\n    materials,\n    project_name: projectName,\n    country,\n    language,\n    api_url: 'http://construction-api:8000'\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                400
+            ],
+            "id": "validate-input",
+            "name": "Validate Input"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{ $json.api_url }}/v1/vector/estimate",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"materials\": {{ JSON.stringify($json.materials) }},\n  \"language\": \"{{ $json.language }}\",\n  \"country\": \"{{ $json.country }}\"\n}",
+                "options": {
+                    "timeout": 60000
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                600,
+                400
+            ],
+            "id": "call-estimate-api",
+            "name": "Call DDC Estimate API"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Process API response and prepare final output\nconst data = $input.first().json;\nconst projectName = $node['Validate Input'].json.project_name;\n\nconst result = {\n  success: true,\n  project_name: projectName,\n  country: data.country,\n  currency: data.currency,\n  vat_rate: data.vat_rate,\n  vat_percent: Math.round(data.vat_rate * 100),\n  \n  // Summary\n  total_net: data.total_net,\n  total_vat: data.total_vat,\n  total_gross: data.total_gross,\n  total_labor_hours: data.total_labor_hours,\n  items_count: data.items_count,\n  avg_confidence: data.avg_confidence,\n  \n  // Breakdown\n  cost_by_category: data.cost_by_category,\n  items: data.items,\n  \n  // Metadata\n  database: 'DDC CWICR',\n  generated_at: data.generated_at || new Date().toISOString()\n};\n\nconsole.log('='.repeat(50));\nconsole.log('DDC CWICR COST ESTIMATION COMPLETE');\nconsole.log('='.repeat(50));\nconsole.log(`Project: ${projectName}`);\nconsole.log(`Total (incl. VAT): €${result.total_gross}`);\nconsole.log(`Items: ${result.items_count}`);\nconsole.log(`Confidence: ${result.avg_confidence}%`);\nconsole.log('='.repeat(50));\n\nreturn [{ json: result }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                800,
+                400
+            ],
+            "id": "format-response",
+            "name": "Format Response"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ JSON.stringify($json) }}",
+                "options": {
+                    "responseCode": 200,
+                    "responseHeaders": {
+                        "entries": [
+                            {
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                1000,
+                400
+            ],
+            "id": "respond-webhook",
+            "name": "Return Results"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ JSON.stringify({ success: false, error: $execution.error?.message || 'Unknown error' }) }}",
+                "options": {
+                    "responseCode": 500
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                800,
+                600
+            ],
+            "id": "error-response",
+            "name": "Return Error"
+        }
+    ],
+    "connections": {
+        "Receive Materials": {
+            "main": [
+                [
+                    {
+                        "node": "Validate Input",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Validate Input": {
+            "main": [
+                [
+                    {
+                        "node": "Call DDC Estimate API",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Call DDC Estimate API": {
+            "main": [
+                [
+                    {
+                        "node": "Format Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Response": {
+            "main": [
+                [
+                    {
+                        "node": "Return Results",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {
+        "executionOrder": "v1",
+        "errorWorkflow": ""
+    },
+    "versionId": "1.0.0",
+    "meta": {
+        "instanceId": "ddc-webhook-estimation"
+    },
+    "id": "DDC_CWICR_Webhook_Estimation",
+    "tags": [
+        "webhook",
+        "cost-estimation",
+        "ddc-cwicr",
+        "api"
+    ]
+}
