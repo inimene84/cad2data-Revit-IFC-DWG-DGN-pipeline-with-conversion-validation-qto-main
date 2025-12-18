@@ -261,7 +261,10 @@ const FileUpload = () => {
     const completedFiles = files.filter(f => f.status === 'completed');
     const allMaterials: any[] = [];
     completedFiles.forEach(f => {
-      if (f.result?.materials) {
+      if (f.result?.construction_items) {
+        // Handle CAD/Excel extraction response
+        allMaterials.push(...f.result.construction_items);
+      } else if (f.result?.materials) {
         allMaterials.push(...f.result.materials);
       } else if (f.result?.extracted_data) {
         // Handle different response formats
@@ -627,7 +630,7 @@ const FileUpload = () => {
                           primary={file.file.name}
                           secondary={
                             file.status === 'completed'
-                              ? `Successfully processed - ${file.result?.materials_found || 0} materials found`
+                              ? `Successfully processed - ${file.result?.construction_items?.length || file.result?.materials_found || 0} materials found`
                               : file.status === 'error'
                                 ? `Error: ${file.error}`
                                 : 'Processing...'
