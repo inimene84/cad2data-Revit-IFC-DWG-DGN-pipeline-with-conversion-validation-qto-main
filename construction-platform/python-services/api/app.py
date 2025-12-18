@@ -136,10 +136,13 @@ from config import MATERIAL_KEYWORDS, REGIONAL_MULTIPLIERS
 # API Versioning
 try:
     from routers.v1 import v1_router
+    from routers.v1.materials import materials_db, material_counter
     API_VERSIONING_AVAILABLE = True
 except ImportError:
     API_VERSIONING_AVAILABLE = False
     v1_router = None
+    materials_db = {}
+    material_counter = 0
     logger.warning("API versioning not available - routers not found")
 
 # Configure logging
@@ -928,12 +931,37 @@ async def extract_excel_data(file: UploadFile = File(...)):
                 construction_items = final_items
                 logger.info(f"Deduplicated to {len(construction_items)} unique elements with aggregated quantities")
 
+        # Persist extracted materials to the materials database
+        if construction_items and API_VERSIONING_AVAILABLE:
+            from routers.v1 import materials as mat_router
+            saved_count = 0
+            for item in construction_items:
+                mat_router.material_counter += 1
+                now = datetime.now()
+                new_material = {
+                    "id": mat_router.material_counter,
+                    "name": item.get('material', 'Unknown'),
+                    "quantity": float(item.get('quantity', 0)),
+                    "unit": item.get('unit', 'unit'),
+                    "price": float(item.get('price', 0)),
+                    "supplier": None,
+                    "project_id": None,
+                    "category": item.get('category', 'extracted'),
+                    "source_file": file.filename,
+                    "created_at": now,
+                    "updated_at": now
+                }
+                mat_router.materials_db[mat_router.material_counter] = new_material
+                saved_count += 1
+            logger.info(f"Saved {saved_count} materials to database from {file.filename}")
+
         return {
             "status": "success", 
             "filename": file.filename,
             "sheets": list(excel_file.sheet_names),
             "sheets_data": sheets_data,
             "construction_items": construction_items,
+            "materials_saved": len(construction_items) if construction_items else 0,
             "processing_time_seconds": processing_time
         }
 
