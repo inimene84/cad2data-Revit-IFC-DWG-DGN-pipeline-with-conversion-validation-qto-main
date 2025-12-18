@@ -109,25 +109,25 @@ export const apiService = {
   },
 
   // Project operations
-  getProjects: () => api.get('/api/projects'),
-  getProject: (id: string) => api.get(`/api/projects/${id}`),
-  createProject: (data: any) => api.post('/api/projects', data),
-  updateProject: (id: string, data: any) => api.put(`/api/projects/${id}`, data),
-  deleteProject: (id: string) => api.delete(`/api/projects/${id}`),
+  getProjects: () => api.get('/v1/projects'),
+  getProject: (id: string) => api.get(`/v1/projects/${id}`),
+  createProject: (data: any) => api.post('/v1/projects', data),
+  updateProject: (id: string, data: any) => api.put(`/v1/projects/${id}`, data),
+  deleteProject: (id: string) => api.delete(`/v1/projects/${id}`),
 
   // Analytics
-  getStats: () => api.get('/api/stats'),
-  getAnalytics: (period?: string) => api.get('/api/analytics', { params: { period } }),
+  getStats: () => api.get('/v1/stats'),
+  getAnalytics: (period?: string) => api.get('/v1/analytics', { params: { period } }),
 
   // 3D Operations
-  generate3DModel: (projectId: string) => api.post(`/api/3d/generate/${projectId}`),
-  get3DModel: (projectId: string) => api.get(`/api/3d/model/${projectId}`),
+  generate3DModel: (projectId: string) => api.post(`/v1/3d/generate/${projectId}`),
+  get3DModel: (projectId: string) => api.get(`/v1/3d/model/${projectId}`),
   update3DAnnotations: (projectId: string, annotations: any[]) =>
-    api.put(`/api/3d/annotations/${projectId}`, { annotations }),
+    api.put(`/v1/3d/annotations/${projectId}`, { annotations }),
 
   // Chat operations
   sendMessage: (message: string, context?: any) => {
-    return api.post('/api/chat', { message, context });
+    return api.post('/v1/chat', { message, context });
   },
 
   // Health check
