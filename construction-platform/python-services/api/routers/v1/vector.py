@@ -88,8 +88,8 @@ async def list_collections():
                 ddc_collections.append({
                     "name": c.name,
                     "language": c.name.replace("ddc_cwicr_", "").upper(),
-                    "vectors_count": info.vectors_count,
-                    "indexed": info.indexed_vectors_count
+                    "vectors_count": info.points_count,
+                    "status": info.status.value if hasattr(info.status, 'value') else str(info.status)
                 })
         
         return {
