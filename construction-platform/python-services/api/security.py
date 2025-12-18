@@ -126,8 +126,8 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 class CSRFProtectionMiddleware(BaseHTTPMiddleware):
     """CSRF protection middleware"""
     async def dispatch(self, request: Request, call_next):
-        # Skip CSRF protection for GET requests
-        if request.method == "GET":
+        # Skip CSRF protection for GET and OPTIONS requests (OPTIONS for CORS preflight)
+        if request.method in ("GET", "OPTIONS"):
             return await call_next(request)
         
         # Skip CSRF protection for file upload endpoints (handled by API)
@@ -140,6 +140,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             request.url.path.startswith("/api/settings") or
             request.url.path.startswith("/v1/analytics") or
             request.url.path.startswith("/api/analytics") or
+            request.url.path.startswith("/v1/vector") or
             request.url.path.startswith("/calculate-materials") or
             request.url.path.startswith("/generate-report") or
             # Allow new v1 endpoints
