@@ -64,3 +64,17 @@ async def update_settings(settings: SettingsRequest):
     # Same as POST for now
     return await save_settings(settings)
 
+
+@router.get("/vat")
+async def get_vat_settings():
+    """Get VAT configuration for Estonia - Version 1"""
+    from config import VAT_RATE, VAT_COUNTRY, VAT_LABEL
+    
+    return {
+        "vat_rate": VAT_RATE,
+        "vat_percentage": int(VAT_RATE * 100),
+        "vat_country": VAT_COUNTRY,
+        "vat_label": VAT_LABEL,
+        "currency": "EUR"
+    }
+

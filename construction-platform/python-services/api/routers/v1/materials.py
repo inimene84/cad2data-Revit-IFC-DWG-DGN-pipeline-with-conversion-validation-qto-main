@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from datetime import datetime
 import logging
 import math
+from config import VAT_RATE, VAT_COUNTRY, VAT_LABEL
 
 logger = logging.getLogger(__name__)
 
@@ -217,6 +218,10 @@ async def get_materials_summary():
     return {
         "total_materials": len(materials),
         "total_value": round(total_value, 2),
+        "vat_rate": VAT_RATE,
+        "vat_country": VAT_COUNTRY,
+        "vat_amount": round(total_value * VAT_RATE, 2),
+        "total_with_vat": round(total_value * (1 + VAT_RATE), 2),
         "by_category": categories,
         "currency": "EUR"
     }

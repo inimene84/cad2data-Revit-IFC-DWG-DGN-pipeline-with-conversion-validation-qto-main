@@ -12,6 +12,7 @@ import json
 import io
 import base64
 import math
+from config import VAT_RATE, VAT_LABEL
 
 logger = logging.getLogger(__name__)
 
@@ -103,8 +104,8 @@ async def generate_report(report_data: ReportCreate):
     
     now = datetime.now()
     
-    # Calculate VAT (Estonian VAT is 22%)
-    vat_rate = 0.22 if report_data.include_vat else 0
+    # Calculate VAT (Estonian VAT rate from config)
+    vat_rate = VAT_RATE if report_data.include_vat else 0
     
     # Sample total cost calculation (in real implementation, fetch from materials)
     base_cost = 15000.00  # Placeholder
@@ -169,7 +170,7 @@ async def download_report(report_id: int):
         p.setFont("Helvetica", 12)
         p.drawString(100, 620, f"Base Cost: €{report.get('base_cost', 0):.2f}")
         if report.get('include_vat'):
-            p.drawString(100, 600, f"VAT (22%): €{report.get('vat_amount', 0):.2f}")
+            p.drawString(100, 600, f"{VAT_LABEL}: €{report.get('vat_amount', 0):.2f}")
         p.drawString(100, 580, f"Total Cost: €{report.get('total_cost', 0):.2f}")
         
         p.save()
