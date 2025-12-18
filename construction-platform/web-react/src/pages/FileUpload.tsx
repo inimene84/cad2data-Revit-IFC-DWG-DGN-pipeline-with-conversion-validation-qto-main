@@ -528,7 +528,7 @@ const FileUpload = () => {
                     sx={{ mb: 2 }}
                   />
 
-                  <Alert severity={useN8nWorkflow ? "secondary" : "info"} sx={{ mb: 2 }}>
+                  <Alert severity={useN8nWorkflow ? "warning" : "info"} sx={{ mb: 2 }}>
                     {files.length} file(s) will be processed with DDC CWICR cost estimation
                     {useN8nWorkflow ? ' via n8n workflow' : ' via API'}
                     ({countries.find(c => c.code === country)?.name} {countries.find(c => c.code === country)?.vat}% VAT)
